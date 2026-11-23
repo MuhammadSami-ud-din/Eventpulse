@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { isProduction } from '../../config/env.js';
+import { env, isProduction } from '../../config/env.js';
 import { buildNotification } from '../../services/notificationMessages.js';
 import { generateTicketCode } from '../../utils/ticketCode.js';
 import { pool } from '../pool.js';
@@ -9,7 +9,6 @@ const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-const SEED_BCRYPT_ROUNDS = 10;
 const DEFAULT_DEADLINE_HOURS_BEFORE = 2;
 const DEFAULT_CANCELLATION_WINDOW_HOURS = 24;
 const ATTENDANCE_RATE = 0.8;
@@ -18,7 +17,7 @@ const CAMPUS_UTC_OFFSET_HOURS = 5;
 const REVIEWED_STATUSES = new Set(['published', 'closed', 'rejected']);
 
 // Child tables first so the order also works with foreign key checks on.
-const TABLES = ['notifications', 'event_attendance', 'event_registrations', 'events', 'event_categories', 'users'];
+const TABLES = ['refresh_tokens', 'notifications', 'event_attendance', 'event_registrations', 'events', 'event_categories', 'users'];
 
 // TRUNCATE is DDL and commits implicitly, so it runs before the insert transaction.
 async function clearTables(conn) {
@@ -33,9 +32,10 @@ async function clearTables(conn) {
 }
 
 async function insertUsers(conn) {
+  // Same cost as real accounts, so login timing cannot tell seeded users apart.
   const [studentHash, organizerHash, adminHash] = await Promise.all(
     [PASSWORDS.student, PASSWORDS.organizer, PASSWORDS.admin].map((password) =>
-      bcrypt.hash(password, SEED_BCRYPT_ROUNDS),
+      bcrypt.hash(password, env.BCRYPT_ROUNDS),
     ),
   );
 
