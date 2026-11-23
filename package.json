@@ -1,0 +1,21 @@
+{
+  "name": "eventhub",
+  "private": true,
+  "description": "Campus event registration platform",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail -n server,client -c blue,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "migrate": "npm run migrate -w server",
+    "migrate:fresh": "npm run migrate:fresh -w server",
+    "seed": "npm run seed -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}
