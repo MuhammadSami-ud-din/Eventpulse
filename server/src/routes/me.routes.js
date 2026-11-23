@@ -13,4 +13,5 @@ meRouter.use(authenticate, requireRole('student'));
 
 meRouter.get('/registrations', validate({ query: myRegistrationsQuerySchema }), registrationController.listMine);
 meRouter.get('/registrations/:id', validate({ params: idParamSchema }), registrationController.getMine);
+meRouter.get('/registrations/:id/qr', validate({ params: idParamSchema }), registrationController.getTicketQr);
 meRouter.post('/registrations/:id/cancel', validate({ params: idParamSchema }), registrationController.cancelMine);

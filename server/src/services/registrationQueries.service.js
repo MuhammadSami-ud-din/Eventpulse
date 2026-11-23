@@ -15,10 +15,16 @@ const STUDENT_VIEW_SELECT = `
   SELECT
     r.id, r.status, r.ticket_code, r.registered_at, r.promoted_at, r.cancelled_at, ${WAITLIST_RANK},
     e.id AS event_id, e.title, e.venue, e.starts_at, e.ends_at, e.status AS event_status,
-    e.cancellation_window_hours, c.name AS category_name, c.slug AS category_slug
+    e.cancellation_window_hours, c.name AS category_name, c.slug AS category_slug,
+    a.status AS attendance_status, a.checked_in_at
   FROM event_registrations r
   JOIN events e ON e.id = r.event_id
-  JOIN event_categories c ON c.id = e.category_id`;
+  JOIN event_categories c ON c.id = e.category_id
+  LEFT JOIN event_attendance a ON a.registration_id = r.id`;
+
+function toAttendance(row) {
+  return row.attendance_status ? { status: row.attendance_status, checkedInAt: row.checked_in_at } : null;
+}
 
 function canCancel(status, event, now) {
   if (status === 'confirmed') return isCancellationOpen(event, now);
@@ -47,6 +53,7 @@ function toStudentRegistration(row, now = Date.now()) {
     promotedAt: row.promoted_at,
     cancelledAt: row.cancelled_at,
     canCancel: canCancel(row.status, event, now),
+    attendance: toAttendance(row),
     event: { ...event, cancellationDeadline: cancellationDeadline(event) },
   };
 }
@@ -95,6 +102,7 @@ function toAttendeeRow(row) {
     registeredAt: row.registered_at,
     promotedAt: row.promoted_at,
     cancelledAt: row.cancelled_at,
+    attendance: toAttendance(row),
     student: {
       id: row.user_id,
       fullName: row.full_name,
@@ -129,12 +137,17 @@ export async function listEventRegistrations(eventId, { q, status, page, pageSiz
     conditions.push('(u.full_name LIKE ? OR u.email LIKE ? OR u.student_number LIKE ?)');
     params.push(pattern, pattern, pattern);
   }
-  const from = `FROM event_registrations r JOIN users u ON u.id = r.user_id WHERE ${conditions.join(' AND ')}`;
+  const from = `
+    FROM event_registrations r
+    JOIN users u ON u.id = r.user_id
+    LEFT JOIN event_attendance a ON a.registration_id = r.id
+    WHERE ${conditions.join(' AND ')}`;
 
   const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${from}`, params);
   const [rows] = await pool.query(
     `SELECT r.id, r.status, r.registered_at, r.promoted_at, r.cancelled_at, ${WAITLIST_RANK},
-            u.id AS user_id, u.full_name, u.email, u.student_number, u.department
+            u.id AS user_id, u.full_name, u.email, u.student_number, u.department,
+            a.status AS attendance_status, a.checked_in_at
      ${from}
      ORDER BY FIELD(r.status, 'confirmed', 'waitlisted', 'cancelled'), r.waitlist_position, r.registered_at
      LIMIT ? OFFSET ?`,

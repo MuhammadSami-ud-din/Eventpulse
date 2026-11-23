@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import * as attendance from '../controllers/attendance.controller.js';
 import * as organizerEvents from '../controllers/organizerEvent.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { checkInSchema, markAttendanceSchema, registrationParamsSchema } from '../schemas/attendance.schemas.js';
 import { idParamSchema } from '../schemas/common.schemas.js';
 import { createEventSchema, managedEventsQuerySchema, updateEventSchema } from '../schemas/event.schemas.js';
 import { eventRegistrationsQuerySchema } from '../schemas/registration.schemas.js';
@@ -29,3 +31,15 @@ organizerRouter.get(
   validate({ params: idParamSchema, query: eventRegistrationsQuerySchema }),
   organizerEvents.listEventRegistrations,
 );
+
+organizerRouter.post(
+  '/events/:id/check-in',
+  validate({ params: idParamSchema, body: checkInSchema }),
+  attendance.checkIn,
+);
+organizerRouter.put(
+  '/events/:id/registrations/:registrationId/attendance',
+  validate({ params: registrationParamsSchema, body: markAttendanceSchema }),
+  attendance.markAttendance,
+);
+organizerRouter.post('/events/:id/attendance/no-shows', byId, attendance.markRemainingNoShows);

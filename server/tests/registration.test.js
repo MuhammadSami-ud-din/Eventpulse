@@ -38,6 +38,7 @@ describe('registration engine', () => {
   test('25 students racing for 1 seat: exactly 1 confirmed, 24 waitlisted at positions 1-24', async () => {
     const eventId = await ctx.createEvent({ capacity: 1 });
     const students = await ctx.createStudents(25);
+    await ctx.warmUpDatabasePool();
 
     const responses = await Promise.all(
       students.map((student) => student.call('POST', `/events/${eventId}/registrations`)),
@@ -59,6 +60,7 @@ describe('registration engine', () => {
   test('one student sending 10 parallel requests: 1 created, 9 ALREADY_REGISTERED', async () => {
     const eventId = await ctx.createEvent({ capacity: 50 });
     const [student] = await ctx.createStudents(1);
+    await ctx.warmUpDatabasePool();
 
     const responses = await Promise.all(
       Array.from({ length: 10 }, () => student.call('POST', `/events/${eventId}/registrations`)),

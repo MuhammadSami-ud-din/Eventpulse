@@ -2,7 +2,7 @@ import { once } from 'node:events';
 import { randomBytes, randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { createApp } from '../src/app.js';
-import { isProduction } from '../src/config/env.js';
+import { env, isProduction } from '../src/config/env.js';
 import { pool } from '../src/db/pool.js';
 import { CSRF_HEADER } from '../src/middleware/csrf.js';
 import { signAccessToken } from '../src/services/token.service.js';
@@ -33,8 +33,12 @@ function apiClient(baseUrl, userId) {
       },
       body: body && JSON.stringify(body),
     });
-    const text = await res.text();
-    return { status: res.status, body: text ? JSON.parse(text) : null };
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    return {
+      status: res.status,
+      headers: res.headers,
+      body: isJson ? await res.json() : Buffer.from(await res.arrayBuffer()),
+    };
   };
 }
 
@@ -112,6 +116,25 @@ export class TestContext {
     );
     this.eventIds.push(result.insertId);
     return result.insertId;
+  }
+
+  // Call right before firing parallel requests. The pool opens connections
+  // lazily, so on a cold pool the first request commits while the others are
+  // still waiting for a connection, and a missing lock goes unnoticed. With
+  // every connection already open, the requests really do overlap.
+  async warmUpDatabasePool() {
+    await Promise.all(
+      Array.from({ length: env.DB_CONNECTION_LIMIT }, () => fetch(`${this.baseUrl}/health`)),
+    );
+  }
+
+  // Moves an event in time (e.g. into the past) after students registered,
+  // since registration itself is only possible before the event starts.
+  async setEventTimes(eventId, { startsAt, endsAt, registrationDeadline = startsAt }) {
+    await pool.query(
+      'UPDATE events SET starts_at = ?, ends_at = ?, registration_deadline = ? WHERE id = ?',
+      [startsAt, endsAt, registrationDeadline, eventId],
+    );
   }
 
   // Children before parents so foreign keys are satisfied. Runs even when
