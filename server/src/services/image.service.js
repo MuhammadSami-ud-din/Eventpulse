@@ -27,11 +27,11 @@ export async function saveImage(kind, ownerId, bytes) {
   const { table, key } = KINDS[kind];
   // execute() sends the bytes as binary; query() would inline them as hex text.
   await pool.execute(
-    `INSERT INTO ${table} (${key}, data, mime_type, byte_size, updated_at)
-     VALUES (?, ?, ?, ?, UTC_TIMESTAMP(3)) AS incoming
-     ON DUPLICATE KEY UPDATE
-       data = incoming.data, mime_type = incoming.mime_type,
-       byte_size = incoming.byte_size, updated_at = incoming.updated_at`,
+    `INSERT INTO user_avatars (user_id, data, mime_type, byte_size, updated_at)
+VALUES (?, ?, ?, ?, UTC_TIMESTAMP(3))
+ON DUPLICATE KEY UPDATE
+  data = VALUES(data), mime_type = VALUES(mime_type),
+  byte_size = VALUES(byte_size), updated_at = VALUES(updated_at)`,
     [ownerId, bytes, mimeType, bytes.length],
   );
   const meta = await findImageMeta(kind, ownerId);
