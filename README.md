@@ -415,9 +415,6 @@ These are terminal screenshots of `npm test` runs in `server/`, taken as the pro
 └── package.json            npm workspaces and root scripts
 ```
 
-## Development notes
-
-[AI-USE DECLARATION: to be filled in by the author before submission]
 
 ## License
 
