@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { fetchCategories } from '../../api/events.js';
 import { createEvent, removeCover, updateEvent, uploadCover } from '../../api/organizer.js';
@@ -13,10 +13,24 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { EMPTY_EVENT_FORM, toEventFormValues } from '../../utils/eventForm.js';
+import { errorMessage } from '../../utils/errors.js';
 import { hasEventStarted } from '../../utils/eventStatus.js';
 
 function useCategories() {
   return useAsync((signal) => fetchCategories({ signal }), []);
+}
+
+// A cover chosen before the event exists: kept in the browser as { blob, url }
+// until the draft is saved. The temporary preview URL is released when the
+// cover is replaced or the page closes.
+function usePendingCover() {
+  const [cover, setCover] = useState(null);
+  useEffect(() => () => cover && URL.revokeObjectURL(cover.url), [cover]);
+  return {
+    cover,
+    choose: (blob) => setCover({ blob, url: URL.createObjectURL(blob) }),
+    clear: () => setCover(null),
+  };
 }
 
 export function NewEventPage() {
@@ -25,12 +39,24 @@ export function NewEventPage() {
   const { showToast } = useToast();
   const { user } = useAuth();
   const categories = useCategories();
+  const pending = usePendingCover();
 
   if (categories.isLoading) return <Loading />;
   if (categories.error) return <ErrorState error={categories.error} onRetry={categories.reload} />;
 
   async function handleCreate(payload) {
     const event = await createEvent(payload);
+    if (pending.cover) {
+      try {
+        await uploadCover(event.id, pending.cover.blob);
+      } catch (error) {
+        // The draft itself is saved; only the picture failed, so send the
+        // organizer to the editor where they can try the upload again.
+        showToast({ type: 'error', message: `Draft saved, but the cover was not uploaded: ${errorMessage(error)} Try again here.` });
+        navigate(`/organizer/events/${event.id}/edit`);
+        return;
+      }
+    }
     showToast({ type: 'success', message: 'Draft saved. Submit it for approval when it is ready.' });
     navigate(`/organizer/events/${event.id}`);
   }
@@ -39,22 +65,30 @@ export function NewEventPage() {
     <>
       <h1>New event</h1>
       <p className="page-intro">
-        New events start as drafts. Students can’t see them until an admin approves them. You can add a cover image
-        after saving the draft.
+        New events start as drafts. Students can’t see them until an admin approves them.
       </p>
+      <CoverSection
+        eventId="new"
+        coverUrl={pending.cover?.url ?? null}
+        deferred
+        hint="Optional. Without one, the event gets a colourful generated cover. Wide pictures work best; it is resized to at most 1280 px and 1 MB, and uploaded when you save the draft."
+        onUpload={async (blob) => pending.choose(blob)}
+        onRemove={async () => pending.clear()}
+      />
       <EventForm
         initialValues={EMPTY_EVENT_FORM}
         categories={categories.data}
         submitLabel="Save draft"
         onSubmit={handleCreate}
-        previewContext={{ organizer: { id: user.id, name: user.fullName, avatarUrl: user.avatarUrl } }}
+        previewContext={{ coverUrl: pending.cover?.url, organizer: { id: user.id, name: user.fullName, avatarUrl: user.avatarUrl } }}
       />
     </>
   );
 }
 
-// Uploading takes effect at once; it does not wait for "Save changes".
-function CoverSection({ event, coverUrl, onChange }) {
+const COVER_HINT = 'Shown on the event card and page. Wide pictures work best; it is resized to at most 1280 px and 1 MB.';
+
+function CoverSection({ eventId, coverUrl, deferred = false, hint = COVER_HINT, onUpload, onRemove }) {
   return (
     <section className="card cover-editor" aria-labelledby="cover-heading">
       <h2 id="cover-heading" className="event-form__heading">
@@ -64,13 +98,11 @@ function CoverSection({ event, coverUrl, onChange }) {
         label="Cover"
         imageUrl={coverUrl}
         maxSize={1280}
-        hint="Shown on the event card and page. Wide pictures work best; it is resized to at most 1280 px and 1 MB."
-        preview={(url) => <EventCover eventId={event.id} coverUrl={url} className="cover-editor__preview" />}
-        onUpload={async (blob) => onChange(await uploadCover(event.id, blob))}
-        onRemove={async () => {
-          await removeCover(event.id);
-          onChange(null);
-        }}
+        deferred={deferred}
+        hint={hint}
+        preview={(url) => <EventCover eventId={eventId} coverUrl={url} className="cover-editor__preview" />}
+        onUpload={onUpload}
+        onRemove={onRemove}
       />
     </section>
   );
@@ -95,7 +127,16 @@ function EditEventForm({ event, categories }) {
       {event.status === 'rejected' && (
         <p className="notice">Saving your changes turns this event back into a draft you can resubmit.</p>
       )}
-      <CoverSection event={event} coverUrl={coverUrl} onChange={setCoverUrl} />
+      {/* Uploading takes effect at once; it does not wait for "Save changes". */}
+      <CoverSection
+        eventId={event.id}
+        coverUrl={coverUrl}
+        onUpload={async (blob) => setCoverUrl(await uploadCover(event.id, blob))}
+        onRemove={async () => {
+          await removeCover(event.id);
+          setCoverUrl(null);
+        }}
+      />
       <EventForm
         initialValues={toEventFormValues(event)}
         categories={categories}

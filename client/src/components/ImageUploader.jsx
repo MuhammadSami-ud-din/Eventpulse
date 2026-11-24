@@ -9,7 +9,9 @@ import { Icon } from './Icon.jsx';
 // shows the new image immediately.
 //   `preview(url)` renders the current image (or a placeholder when url is null).
 //   `onUpload(blob)` resolves to the new image URL; `onRemove()` removes it.
-export function ImageUploader({ label, imageUrl, maxSize, square = false, preview, onUpload, onRemove, hint }) {
+//   `deferred`: the caller keeps the picture and uploads it later (e.g. when a
+//   new event is first saved), so the messages don't claim it is uploaded yet.
+export function ImageUploader({ label, imageUrl, maxSize, square = false, deferred = false, preview, onUpload, onRemove, hint }) {
   const inputRef = useRef(null);
   const statusId = useId();
   const [status, setStatus] = useState({ busy: false, error: '', message: '' });
@@ -26,12 +28,12 @@ export function ImageUploader({ label, imageUrl, maxSize, square = false, previe
     const file = e.target.files[0];
     e.target.value = ''; // choosing the same file again still triggers a change
     if (!file) return;
-    setStatus({ busy: true, error: '', message: 'Preparing and uploading…' });
+    setStatus({ busy: true, error: '', message: deferred ? 'Preparing…' : 'Preparing and uploading…' });
     try {
       const blob = await prepareImage(file, { maxSize, square });
       await onUpload(blob);
       setLocalUrl(URL.createObjectURL(blob));
-      setStatus({ busy: false, error: '', message: `${label} updated.` });
+      setStatus({ busy: false, error: '', message: deferred ? `${label} ready. It is uploaded when you save.` : `${label} updated.` });
     } catch (error) {
       setStatus({ busy: false, error: error.response ? errorMessage(error) : error.message, message: '' });
     }
