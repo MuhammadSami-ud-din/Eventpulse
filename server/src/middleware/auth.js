@@ -28,3 +28,18 @@ export function requireRole(...roles) {
     next();
   };
 }
+
+// For pages anyone may load but signed-in users may see more of (e.g. a
+// student's avatar). A missing, expired or invalid token simply means anonymous.
+export async function optionalAuthenticate(req, res, next) {
+  const token = req.cookies[ACCESS_COOKIE];
+  if (token) {
+    try {
+      const { userId } = verifyAccessToken(token);
+      req.user = (await findActiveUserById(pool, userId)) ?? undefined;
+    } catch {
+      req.user = undefined;
+    }
+  }
+  next();
+}

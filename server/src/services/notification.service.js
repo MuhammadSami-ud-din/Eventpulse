@@ -1,6 +1,7 @@
 import { pool } from '../db/pool.js';
 import { HttpError } from '../utils/HttpError.js';
 import { buildNotification } from './notificationMessages.js';
+import { imageUrl } from '../utils/imageUrl.js';
 
 // `db` is passed in so the notification is written in the caller's transaction:
 // if the action rolls back, so does its notification.
@@ -12,10 +13,18 @@ export async function createNotification(db, { userId, eventId, type, eventTitle
   );
 }
 
+// Event notifications show who they are about: the event's organizer.
 function toNotification(row) {
   return {
     id: row.id,
     eventId: row.event_id,
+    organizer: row.organizer_id
+      ? {
+          id: row.organizer_id,
+          name: row.organizer_name,
+          avatarUrl: imageUrl('avatar', row.organizer_id, row.organizer_avatar_updated_at),
+        }
+      : null,
     type: row.type,
     title: row.title,
     message: row.message,
@@ -35,9 +44,14 @@ export async function countUnread(userId) {
 export async function listNotifications(userId, { page, pageSize }) {
   const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM notifications WHERE user_id = ?', [userId]);
   const [rows] = await pool.query(
-    `SELECT id, event_id, type, title, message, read_at, created_at
-     FROM notifications WHERE user_id = ?
-     ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
+    `SELECT n.id, n.event_id, n.type, n.title, n.message, n.read_at, n.created_at,
+            o.id AS organizer_id, o.full_name AS organizer_name, oa.updated_at AS organizer_avatar_updated_at
+     FROM notifications n
+     LEFT JOIN events e ON e.id = n.event_id
+     LEFT JOIN users o ON o.id = e.organizer_id
+     LEFT JOIN user_avatars oa ON oa.user_id = o.id
+     WHERE n.user_id = ?
+     ORDER BY n.created_at DESC, n.id DESC LIMIT ? OFFSET ?`,
     [userId, pageSize, (page - 1) * pageSize],
   );
   return {

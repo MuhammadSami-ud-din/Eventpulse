@@ -33,5 +33,7 @@ describe('API error helpers', () => {
     });
     assert.deepEqual(fieldErrors(error), { email: 'Enter a valid email address', fullName: 'Name is too short' });
     assert.deepEqual(fieldErrors(new Error('no details')), {});
+    const listError = apiError({ details: [{ field: 'agenda.1.time', message: 'Use 24-hour time, e.g. 14:30' }] });
+    assert.deepEqual(fieldErrors(listError), { agenda: 'Item 2: Use 24-hour time, e.g. 14:30' });
   });
 });

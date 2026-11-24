@@ -1,16 +1,13 @@
 import { Link, useParams } from 'react-router';
 import { fetchEvent } from '../api/events.js';
-import { Badge } from '../components/Badge.jsx';
-import { RegistrationPanel } from '../components/RegistrationPanel.jsx';
-import { SeatMeter } from '../components/SeatMeter.jsx';
+import { EventHero, EventSections, RelatedEvents } from '../components/EventDetails.jsx';
+import { RegisterCard } from '../components/RegisterCard.jsx';
 import { DetailSkeleton } from '../components/Skeletons.jsx';
 import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { usePolling } from '../hooks/usePolling.js';
 import { errorCode } from '../utils/errors.js';
-import { eventAvailability } from '../utils/eventStatus.js';
-import { formatDateTime, formatEventTime, pluralize } from '../utils/format.js';
 
 // Seat counts change as other students register; the server answers unchanged
 // data with a cheap 304 thanks to its ETag.
@@ -35,56 +32,19 @@ export function EventDetailPage() {
   }
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
-  const availability = eventAvailability(event);
   return (
-    <article className="event-detail">
+    <article className="event-page">
       <Link to="/" className="back-link">
         ← All events
       </Link>
-      <header className="event-detail__header">
-        <div className="event-detail__badges">
-          <Badge>{event.category.name}</Badge>
-          <Badge tone={availability.tone}>{availability.label}</Badge>
+      <EventHero event={event} />
+      <div className="event-page__layout">
+        <div className="event-page__main">
+          <EventSections event={event} />
         </div>
-        <h1>{event.title}</h1>
-        <p className="event-detail__organizer">Hosted by {event.organizer.name}</p>
-      </header>
-
-      <div className="event-detail__layout">
-        <div className="event-detail__main">
-          <dl className="facts">
-            <div>
-              <dt>When</dt>
-              <dd>{formatEventTime(event.startsAt, event.endsAt)}</dd>
-            </div>
-            <div>
-              <dt>Where</dt>
-              <dd>{event.venue}</dd>
-            </div>
-            <div>
-              <dt>Registration closes</dt>
-              <dd>{formatDateTime(event.registrationDeadline)}</dd>
-            </div>
-          </dl>
-          <h2>About this event</h2>
-          <p className="event-detail__description">{event.description}</p>
-
-          <h2>Cancellation rules</h2>
-          <ul className="rules">
-            <li>
-              Confirmed seats can be cancelled until <strong>{formatDateTime(event.cancellationDeadline)}</strong>
-              {event.cancellationWindowHours > 0 && ` (${pluralize(event.cancellationWindowHours, 'hour')} before the start)`}.
-            </li>
-            <li>You can leave the waitlist any time before the event starts.</li>
-            <li>When a seat is cancelled, the first person on the waitlist gets it automatically.</li>
-          </ul>
-        </div>
-
-        <aside className="card event-detail__aside" aria-label="Registration">
-          <SeatMeter event={event} />
-          <RegistrationPanel event={event} onChanged={reload} />
-        </aside>
+        <RegisterCard event={event} onChanged={reload} />
       </div>
+      <RelatedEvents event={event} />
     </article>
   );
 }

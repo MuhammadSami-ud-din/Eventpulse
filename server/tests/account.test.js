@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { TestContext } from './helpers.js';
+import { pool } from '../src/db/pool.js';
+import { days, fromNow, hours, TestContext } from './helpers.js';
 
 const ctx = new TestContext();
 before(() => ctx.start());
@@ -73,5 +74,44 @@ describe('changing password', () => {
 
     assert.equal((await ctx.login(user.email, PASSWORD)).loginStatus, 401);
     assert.equal((await ctx.login(user.email, NEW_PASSWORD)).loginStatus, 200);
+  });
+});
+
+describe('account summary', () => {
+  test('a student sees their upcoming and past events and attendance', async () => {
+    const student = await ctx.createUser('student');
+    const organizer = await ctx.createUser('organizer');
+    const upcomingId = await ctx.createEvent();
+    const pastId = await ctx.createEvent();
+    await student.call('POST', `/events/${upcomingId}/registrations`);
+    const { body } = await student.call('POST', `/events/${pastId}/registrations`);
+    await ctx.setEventTimes(pastId, { startsAt: fromNow(-days(3)), endsAt: fromNow(-days(3) + hours(2)) });
+    await pool.query(
+      "INSERT INTO event_attendance (registration_id, status, checked_in_at, marked_by) VALUES (?, 'attended', UTC_TIMESTAMP(), ?)",
+      [body.registration.id, organizer.id],
+    );
+
+    const { summary } = (await student.call('GET', '/account/summary')).body;
+
+    assert.deepEqual(summary.stats, { upcoming: 1, past: 1, attended: 1, noShows: 0, attendanceRate: 1 });
+    assert.deepEqual(summary.upcoming.map((r) => r.event.id), [upcomingId]);
+    assert.deepEqual(summary.recent.map((r) => r.event.id), [pastId]);
+  });
+
+  test('an organizer sees counts of their own events', async () => {
+    const organizer = await ctx.createUser('organizer');
+    await ctx.createEvent({ organizerId: organizer.id });
+    await ctx.createEvent({ organizerId: organizer.id, status: 'draft' });
+
+    const { summary } = (await organizer.call('GET', '/account/summary')).body;
+
+    assert.equal(summary.stats.total, 2);
+    assert.equal(summary.stats.published, 1);
+    assert.equal(summary.stats.drafts, 1);
+    assert.equal(summary.upcomingEvents.length, 2);
+  });
+
+  test('the summary needs a session', async () => {
+    assert.equal((await fetch(`${ctx.baseUrl}/account/summary`)).status, 401);
   });
 });

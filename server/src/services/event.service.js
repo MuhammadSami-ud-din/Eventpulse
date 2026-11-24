@@ -1,6 +1,7 @@
 import { pool } from '../db/pool.js';
 import { containsPattern } from '../utils/sql.js';
 import { cacheKeys, remember } from './cache.js';
+import { imageUrl } from '../utils/imageUrl.js';
 
 export const PUBLIC_STATUSES = ['published', 'closed'];
 
@@ -26,15 +27,18 @@ const SORT_ORDERS = {
 const EVENT_FROM = `
   FROM events e
   JOIN event_categories c ON c.id = e.category_id
-  JOIN users u ON u.id = e.organizer_id`;
+  JOIN users u ON u.id = e.organizer_id
+  LEFT JOIN event_covers ec ON ec.event_id = e.id
+  LEFT JOIN user_avatars ua ON ua.user_id = u.id`;
 
 const EVENT_SELECT = `
   SELECT
-    e.id, e.title, e.description, e.venue, e.starts_at, e.ends_at, e.registration_deadline,
+    e.id, e.title, e.tagline, e.description, e.venue, e.starts_at, e.ends_at, e.registration_deadline,
     e.cancellation_window_hours, e.capacity, e.confirmed_count, e.status, e.rejection_reason,
-    e.created_at, e.updated_at,
+    e.agenda, e.speakers, e.tags, e.what_to_bring, e.entry_notes, e.contact,
+    e.created_at, e.updated_at, ec.updated_at AS cover_updated_at,
     c.id AS category_id, c.name AS category_name, c.slug AS category_slug,
-    u.id AS organizer_id, u.full_name AS organizer_name,
+    u.id AS organizer_id, u.full_name AS organizer_name, ua.updated_at AS organizer_avatar_updated_at,
     (SELECT COUNT(*) FROM event_registrations r
       WHERE r.event_id = e.id AND r.status = 'waitlisted') AS waitlist_count
   ${EVENT_FROM}`;
@@ -43,6 +47,7 @@ export function toEvent(row) {
   return {
     id: row.id,
     title: row.title,
+    tagline: row.tagline,
     description: row.description,
     venue: row.venue,
     startsAt: row.starts_at,
@@ -55,8 +60,20 @@ export function toEvent(row) {
     waitlistCount: Number(row.waitlist_count),
     status: row.status,
     rejectionReason: row.rejection_reason,
+    // mysql2 already parses JSON columns; NULL means "none" for events made before the details existed.
+    agenda: row.agenda ?? [],
+    speakers: row.speakers ?? [],
+    tags: row.tags ?? [],
+    whatToBring: row.what_to_bring,
+    entryNotes: row.entry_notes,
+    contact: row.contact,
+    coverUrl: imageUrl('cover', row.id, row.cover_updated_at),
     category: { id: row.category_id, name: row.category_name, slug: row.category_slug },
-    organizer: { id: row.organizer_id, name: row.organizer_name },
+    organizer: {
+      id: row.organizer_id,
+      name: row.organizer_name,
+      avatarUrl: imageUrl('avatar', row.organizer_id, row.organizer_avatar_updated_at),
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

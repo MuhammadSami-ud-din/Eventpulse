@@ -2,6 +2,7 @@ import { pool } from '../db/pool.js';
 import { cancellationDeadline, hasStarted, isCancellationOpen } from '../utils/eventTiming.js';
 import { HttpError } from '../utils/HttpError.js';
 import { containsPattern } from '../utils/sql.js';
+import { imageUrl } from '../utils/imageUrl.js';
 
 // Stored positions are never renumbered (that would rewrite many rows on every
 // cancellation), so the place in line is computed: waitlisted rows ahead + 1.
@@ -16,11 +17,12 @@ const STUDENT_VIEW_SELECT = `
     r.id, r.status, r.ticket_code, r.registered_at, r.promoted_at, r.cancelled_at, ${WAITLIST_RANK},
     e.id AS event_id, e.title, e.venue, e.starts_at, e.ends_at, e.status AS event_status,
     e.cancellation_window_hours, c.name AS category_name, c.slug AS category_slug,
-    a.status AS attendance_status, a.checked_in_at
+    a.status AS attendance_status, a.checked_in_at, ec.updated_at AS cover_updated_at
   FROM event_registrations r
   JOIN events e ON e.id = r.event_id
   JOIN event_categories c ON c.id = e.category_id
-  LEFT JOIN event_attendance a ON a.registration_id = r.id`;
+  LEFT JOIN event_attendance a ON a.registration_id = r.id
+  LEFT JOIN event_covers ec ON ec.event_id = e.id`;
 
 function toAttendance(row) {
   return row.attendance_status ? { status: row.attendance_status, checkedInAt: row.checked_in_at } : null;
@@ -42,6 +44,7 @@ function toStudentRegistration(row, now = Date.now()) {
     status: row.event_status,
     cancellationWindowHours: row.cancellation_window_hours,
     category: { name: row.category_name, slug: row.category_slug },
+    coverUrl: imageUrl('cover', row.event_id, row.cover_updated_at),
   };
   return {
     id: row.id,
@@ -109,6 +112,7 @@ function toAttendeeRow(row) {
       email: row.email,
       studentNumber: row.student_number,
       department: row.department,
+      avatarUrl: imageUrl('avatar', row.user_id, row.avatar_updated_at),
     },
   };
 }
@@ -141,13 +145,14 @@ export async function listEventRegistrations(eventId, { q, status, page, pageSiz
     FROM event_registrations r
     JOIN users u ON u.id = r.user_id
     LEFT JOIN event_attendance a ON a.registration_id = r.id
+    LEFT JOIN user_avatars ua ON ua.user_id = u.id
     WHERE ${conditions.join(' AND ')}`;
 
   const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${from}`, params);
   const [rows] = await pool.query(
     `SELECT r.id, r.status, r.registered_at, r.promoted_at, r.cancelled_at, ${WAITLIST_RANK},
             u.id AS user_id, u.full_name, u.email, u.student_number, u.department,
-            a.status AS attendance_status, a.checked_in_at
+            a.status AS attendance_status, a.checked_in_at, ua.updated_at AS avatar_updated_at
      ${from}
      ORDER BY FIELD(r.status, 'confirmed', 'waitlisted', 'cancelled'), r.waitlist_position, r.registered_at
      LIMIT ? OFFSET ?`,

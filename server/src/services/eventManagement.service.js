@@ -8,7 +8,8 @@ import { findEventById, queryEventPage } from './event.service.js';
 import { createNotification } from './notification.service.js';
 import { fillOpenSeats } from './registration.service.js';
 
-// Maps API field names to columns. Only these keys can ever reach an UPDATE.
+// Maps API field names to columns. Only these fixed names ever reach the SQL
+// text of an INSERT or UPDATE; the values always go through placeholders.
 const COLUMN_BY_FIELD = {
   title: 'title',
   description: 'description',
@@ -19,7 +20,18 @@ const COLUMN_BY_FIELD = {
   registrationDeadline: 'registration_deadline',
   cancellationWindowHours: 'cancellation_window_hours',
   capacity: 'capacity',
+  tagline: 'tagline',
+  agenda: 'agenda',
+  speakers: 'speakers',
+  tags: 'tags',
+  whatToBring: 'what_to_bring',
+  entryNotes: 'entry_notes',
+  contact: 'contact',
 };
+
+// List fields are stored as JSON text; everything else goes in as it is.
+const JSON_FIELDS = new Set(['agenda', 'speakers', 'tags']);
+const toColumnValue = (field, value) => (JSON_FIELDS.has(field) ? JSON.stringify(value) : value ?? null);
 
 const DELETABLE_STATUSES = new Set(['draft', 'pending', 'rejected']);
 const SUBMITTABLE_STATUSES = new Set(['draft', 'rejected']);
@@ -82,23 +94,11 @@ export async function getManagedEvent(user, eventId) {
 
 export async function createEvent(user, data) {
   try {
+    const fields = Object.keys(COLUMN_BY_FIELD);
     const [result] = await pool.execute(
-      `INSERT INTO events (
-         organizer_id, category_id, title, description, venue, starts_at, ends_at,
-         registration_deadline, cancellation_window_hours, capacity, status
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
-      [
-        user.id,
-        data.categoryId,
-        data.title,
-        data.description,
-        data.venue,
-        data.startsAt,
-        data.endsAt,
-        data.registrationDeadline,
-        data.cancellationWindowHours,
-        data.capacity,
-      ],
+      `INSERT INTO events (organizer_id, status, ${fields.map((field) => COLUMN_BY_FIELD[field]).join(', ')})
+       VALUES (?, 'draft', ${fields.map(() => '?').join(', ')})`,
+      [user.id, ...fields.map((field) => toColumnValue(field, data[field]))],
     );
     return findEventById(pool, result.insertId);
   } catch (err) {
@@ -123,7 +123,7 @@ export function updateEvent(user, eventId, patch) {
 
     try {
       await conn.query(`UPDATE events SET ${assignments.join(', ')} WHERE id = ?`, [
-        ...fields.map((field) => patch[field]),
+        ...fields.map((field) => toColumnValue(field, patch[field])),
         eventId,
       ]);
     } catch (err) {

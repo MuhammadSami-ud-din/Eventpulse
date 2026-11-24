@@ -12,6 +12,7 @@ import './styles/pages.css';
 import './styles/organizer.css';
 import './styles/admin.css';
 import './styles/shell.css';
+import './styles/event.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

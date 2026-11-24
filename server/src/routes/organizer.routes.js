@@ -2,6 +2,8 @@ import { Router } from 'express';
 import * as attendance from '../controllers/attendance.controller.js';
 import * as organizerEvents from '../controllers/organizerEvent.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
+import { imageBody } from '../middleware/imageBody.js';
+import { imageUploadLimiter } from '../middleware/rateLimiters.js';
 import { validate } from '../middleware/validate.js';
 import { checkInSchema, markAttendanceSchema, registrationParamsSchema } from '../schemas/attendance.schemas.js';
 import { idParamSchema, utcOffsetQuerySchema } from '../schemas/common.schemas.js';
@@ -53,3 +55,6 @@ organizerRouter.put(
   attendance.markAttendance,
 );
 organizerRouter.post('/events/:id/attendance/no-shows', byId, attendance.markRemainingNoShows);
+
+organizerRouter.put('/events/:id/cover', imageUploadLimiter, byId, imageBody, organizerEvents.uploadCover);
+organizerRouter.delete('/events/:id/cover', byId, organizerEvents.removeCover);

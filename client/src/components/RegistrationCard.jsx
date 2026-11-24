@@ -3,6 +3,7 @@ import { ATTENDANCE_STATUS, REGISTRATION_STATUS } from '../utils/eventStatus.js'
 import { formatEventTime } from '../utils/format.js';
 import { AddToCalendarButton } from './AddToCalendarButton.jsx';
 import { Badge } from './Badge.jsx';
+import { EventCover } from './EventCover.jsx';
 
 export function RegistrationCard({ registration, onCancel }) {
   const { event, status, attendance } = registration;
@@ -11,6 +12,7 @@ export function RegistrationCard({ registration, onCancel }) {
 
   return (
     <article className={`card registration-card ${isActive ? '' : 'registration-card--muted'}`}>
+      <EventCover eventId={event.id} coverUrl={event.coverUrl} className="registration-card__cover" />
       <div className="registration-card__badges">
         <Badge tone={statusInfo.tone}>
           {status === 'waitlisted' ? `Waitlist #${registration.waitlistPosition}` : statusInfo.label}

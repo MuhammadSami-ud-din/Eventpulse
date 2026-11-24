@@ -63,6 +63,13 @@ export function useForm(initialValues, schema) {
     }
   }
 
+  // For inputs that are not plain form controls, such as a list of agenda items.
+  function setValue(name, value) {
+    const next = { ...values, [name]: value };
+    setValues(next);
+    if (attempted) setErrors(validateForm(next, schema));
+  }
+
   function reset(nextValues = initialValues) {
     setValues(nextValues);
     setErrors({});
@@ -80,5 +87,5 @@ export function useForm(initialValues, schema) {
     },
   });
 
-  return { values, field, submitWith, submitting, reset };
+  return { values, errors, field, setValue, submitWith, submitting, reset };
 }

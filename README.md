@@ -22,11 +22,13 @@ A campus event registration platform. Students find events and register for a se
 
 | Role | Can do |
 |---|---|
-| **Student** | Sign up; browse, search and filter events; register (a seat if one is free, otherwise the waitlist); cancel; view and download QR tickets; add events to a calendar (`.ics`); read notifications; edit their profile and password. |
-| **Organizer** | Create, edit, submit, close, reopen and delete their own events; view per-event stats; search, filter and export registrations as CSV; check students in by camera scan or typed code; mark attendance and no-shows. |
+| **Student** | Sign up; browse, search and filter events; register (a seat if one is free, otherwise the waitlist); cancel; view and download QR tickets; add events to a calendar (`.ics`); read notifications; manage their profile (photo, details, password) and see their activity. |
+| **Organizer** | Create, edit, submit, close, reopen and delete their own events, with a cover image, tagline, formatted description, agenda, speakers, tags and entry notes (with a live preview); view per-event stats; search, filter and export registrations as CSV; check students in by camera scan or typed code; mark attendance and no-shows. |
 | **Admin** | Everything an organizer can do, for every event; approve or reject submitted events (with a reason); create organizer and admin accounts; change roles; disable and re-enable accounts; manage categories; view platform analytics. |
 
 Anyone can open a public ticket-status page at `/t/<code>` (this is what a phone's camera opens when the QR code contains a link). It shows the ticket's status and event, never the holder's details.
+
+**Keyboard:** Ctrl+K (⌘K on a Mac) opens a command palette to jump to pages, search events, switch theme or log out; `/` focuses the page's search box; `?` lists every shortcut.
 
 ## Tech stack
 
@@ -144,6 +146,8 @@ npm run migrate   # creates the tables; safe to run again (applies only new migr
 npm run seed      # deletes ALL rows and inserts fictional demo data
 ```
 
+**Updating an existing copy?** Run `npm run migrate` after pulling: migrations 009–011 add image storage (avatars and event covers) and the optional event details. Run `npm run seed` again if you also want the demo events' new covers, agendas and speakers.
+
 `npm run migrate:fresh` drops and recreates the database. Both it and `seed` refuse to run with `NODE_ENV=production`.
 
 ### 5. Start
@@ -198,14 +202,16 @@ The server tests start the app on a random port and run against the database in 
 | `organizer.test.js` | Event stats and time-zone bucketing; CSV export (formula-injection guard, quoting, ownership); registrations table search; admin user list. |
 | `admin.test.js` | Creating accounts; role changes and their guards (including two admins demoting each other at once); disabling accounts; categories; analytics. |
 | `validation.test.js` | Body size, content type and malformed JSON; strict numbers; hidden characters and Unicode normalisation; date limits; about 900 hostile requests across every route without a server error. |
-| `account.test.js`, `notifications.test.js` | Profile and password changes; notifications and their privacy. |
+| `images.test.js` | Avatar and cover upload, replace and remove; the real type is read from the bytes; 1 MB and type limits; who may see a student's avatar; covers private until an event is public; 304 answers. |
+| `eventDetails.test.js` | Tagline, agenda, speakers, tags and notes: saving, clearing, per-item validation, and HTML stored as plain text. |
+| `account.test.js`, `notifications.test.js` | Profile and password changes; the profile activity summary; notifications and their privacy. |
 | `production.test.js`, `databaseUrl.test.js`, `errorHandler.test.js` | Serving the built client (fallback, cache headers, CSP); `DATABASE_URL` parsing; no internal details in 500 errors. |
 
-Client tests (`client/tests/`) cover the form validation rules, event-form schedule rules, `.ics` generation, formatting, error helpers and password suggestions.
+Client tests (`client/tests/`) cover the form validation rules, the event form (schedule and detail rules), the safe formatting renderer (script and `javascript:` link injection), image resizing maths, `.ics` generation, formatting, error helpers, navigation per role, command search, keyboard shortcuts, placeholder colours and password suggestions.
 
 ## API reference
 
-All paths start with `/api`. Every `POST`, `PUT`, `PATCH` and `DELETE` needs the `X-CSRF-Token` header (get the token from `GET /api/auth/csrf`). Request bodies must be JSON.
+All paths start with `/api`. Every `POST`, `PUT`, `PATCH` and `DELETE` needs the `X-CSRF-Token` header (get the token from `GET /api/auth/csrf`). Request bodies must be JSON, except image uploads, whose body is the image itself (`Content-Type: image/jpeg`, `image/png` or `image/webp`, at most 1 MB).
 
 **Public**
 
@@ -216,6 +222,8 @@ All paths start with `/api`. Every `POST`, `PUT`, `PATCH` and `DELETE` needs the
 | GET | `/events` | Published and closed events; filters `q`, `category`, `from`, `to`, `sort`, `page`, `pageSize` |
 | GET | `/events/:id` | One public event, with seats left and waitlist length |
 | GET | `/tickets/:code` | Public ticket status (no personal data) |
+| GET | `/images/avatars/:userId` | A profile photo (students' only to themselves, admins and organizers of their events) |
+| GET | `/images/covers/:eventId` | An event cover (public once the event is; before that only its managers) |
 
 **Auth** (`/auth`)
 
@@ -229,6 +237,9 @@ All paths start with `/api`. Every `POST`, `PUT`, `PATCH` and `DELETE` needs the
 | GET | `/auth/me` | signed in | The current user |
 | PATCH | `/auth/me` | signed in | Update name and department |
 | POST | `/auth/password` | signed in | Change the password and log out other devices |
+| GET | `/account/summary` | signed in | Profile activity: a student's registrations and attendance, an organizer's events |
+| PUT | `/account/avatar` | signed in | Upload or replace your own profile photo |
+| DELETE | `/account/avatar` | signed in | Remove your profile photo |
 
 **Student**
 
@@ -266,6 +277,8 @@ All paths start with `/api`. Every `POST`, `PUT`, `PATCH` and `DELETE` needs the
 | POST | `/organizer/events/:id/check-in` | Check in by ticket code or ticket link |
 | PUT | `/organizer/events/:id/registrations/:registrationId/attendance` | Mark attended or no-show |
 | POST | `/organizer/events/:id/attendance/no-shows` | After the event: mark all remaining as no-shows |
+| PUT | `/organizer/events/:id/cover` | Upload or replace the cover image |
+| DELETE | `/organizer/events/:id/cover` | Remove the cover image |
 
 **Admin**
 
@@ -298,10 +311,13 @@ Errors always have the shape `{ "error": { "code", "message", "details"? } }`, w
   | Sign-up per IP | 20 per hour |
   | Failed logins per IP and email | 5 per 15 minutes |
   | Password-change attempts per user | 5 per 15 minutes |
+  | Image uploads per user | 30 per 15 minutes |
   | Public ticket lookups per IP | 60 per minute |
 
 - **The 15-minute window after logout.** Logging out revokes the refresh token and clears the cookies, but access tokens are not individually revocable. A copied access token keeps working until it expires (`ACCESS_TOKEN_TTL_MINUTES`, 15 by default). The same applies to other devices after a password change. Disabling an account or changing a role takes effect immediately, because every request re-reads the user from the database.
 - **Single instance only.** The response cache and the rate-limit counters live in the Node process's memory. That is correct for one server. Running several instances would need a shared store (such as Redis), or seat counts could look stale and the rate limits would multiply.
+- **Images** are stored in the database (so they survive redeploys) and limited to 1 MB. The type is read from the file's first bytes, never from what the browser claims, and only JPEG, PNG and WebP are accepted: SVG is refused because it can contain scripts. A student's photo is only shown to them, to admins, and to organizers of events they registered for; anyone else gets a 404, as if it did not exist. Images are served with an ETag and a versioned URL, and are marked `private` when not everyone may see them.
+- **Formatted text** (event descriptions) is never inserted into the page as HTML. A small Markdown subset is turned into React elements, so `<script>` shows as text, and only `http`, `https` and `mailto` links become links.
 - **Passwords** are hashed with bcrypt; hashes are never returned by the API, and a login for an unknown email takes as long as one with a wrong password.
 - **Input validation:**
   - Request bodies must be JSON and at most 100 KB.

@@ -8,11 +8,13 @@ import { noStore } from './middleware/cacheControl.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { requireJsonBody } from './middleware/requireJsonBody.js';
+import { accountRouter } from './routes/account.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { categoryRouter } from './routes/category.routes.js';
 import { eventRouter } from './routes/event.routes.js';
 import { healthRouter } from './routes/health.routes.js';
+import { imageRouter } from './routes/image.routes.js';
 import { meRouter } from './routes/me.routes.js';
 import { notificationRouter } from './routes/notification.routes.js';
 import { organizerRouter } from './routes/organizer.routes.js';
@@ -70,6 +72,8 @@ export function createApp({ clientDistDir } = {}) {
   app.use('/api/organizer', organizerRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/tickets', ticketRouter);
+  app.use('/api/account', accountRouter);
+  app.use('/api/images', imageRouter);
   // Unknown API paths get a JSON 404, never the app's HTML page.
   app.use('/api', notFound);
 

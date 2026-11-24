@@ -3,7 +3,9 @@ import { env, isProduction } from '../../config/env.js';
 import { buildNotification } from '../../services/notificationMessages.js';
 import { generateTicketCode } from '../../utils/ticketCode.js';
 import { pool } from '../pool.js';
+import { generateCover } from './covers.js';
 import { ADMIN, CATEGORIES, EVENTS, ORGANIZERS, PASSWORDS, STUDENTS } from './data.js';
+import { EVENT_DETAILS } from './details.js';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -17,7 +19,17 @@ const CAMPUS_UTC_OFFSET_HOURS = 5;
 const REVIEWED_STATUSES = new Set(['published', 'closed', 'rejected']);
 
 // Child tables first so the order also works with foreign key checks on.
-const TABLES = ['refresh_tokens', 'notifications', 'event_attendance', 'event_registrations', 'events', 'event_categories', 'users'];
+const TABLES = [
+  'refresh_tokens',
+  'notifications',
+  'event_attendance',
+  'event_registrations',
+  'event_covers',
+  'events',
+  'event_categories',
+  'user_avatars',
+  'users',
+];
 
 // TRUNCATE is DDL and commits implicitly, so it runs before the insert transaction.
 async function clearTables(conn) {
@@ -92,14 +104,18 @@ function buildSchedule(event, now) {
   };
 }
 
+const asJson = (list) => (list ? JSON.stringify(list) : null);
+
 async function insertEvent(conn, event, schedule, { organizerId, categoryId, adminId }) {
   const isReviewed = REVIEWED_STATUSES.has(event.status);
+  const details = EVENT_DETAILS[event.title] ?? {};
   const [result] = await conn.execute(
     `INSERT INTO events (
        organizer_id, category_id, title, description, venue,
        starts_at, ends_at, registration_deadline, cancellation_window_hours,
-       capacity, confirmed_count, status, rejection_reason, reviewed_by, reviewed_at, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       capacity, confirmed_count, status, rejection_reason, reviewed_by, reviewed_at, created_at,
+       tagline, agenda, speakers, tags, what_to_bring, entry_notes, contact
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       organizerId,
       categoryId,
@@ -117,9 +133,24 @@ async function insertEvent(conn, event, schedule, { organizerId, categoryId, adm
       isReviewed ? adminId : null,
       isReviewed ? schedule.reviewedAt : null,
       schedule.createdAt,
+      details.tagline ?? null,
+      asJson(details.agenda),
+      asJson(details.speakers),
+      asJson(details.tags),
+      details.whatToBring ?? null,
+      details.entryNotes ?? null,
+      details.contact ?? null,
     ],
   );
   return result.insertId;
+}
+
+async function insertCover(conn, eventId, event, eventIndex) {
+  const image = generateCover(event.category, eventIndex);
+  await conn.execute(
+    "INSERT INTO event_covers (event_id, data, mime_type, byte_size, updated_at) VALUES (?, ?, 'image/png', ?, UTC_TIMESTAMP(3))",
+    [eventId, image, image.length],
+  );
 }
 
 // Rotates through the student list so each event gets a different mix of students.
@@ -208,6 +239,7 @@ async function insertEventsWithActivity(conn, { adminId, organizerIds, studentId
       categoryId: categoryIds.get(event.category),
       adminId,
     });
+    await insertCover(conn, eventId, event, eventIndex);
 
     if (REVIEWED_STATUSES.has(event.status)) {
       notifications.push(reviewNotification(organizerId, eventId, event, schedule));

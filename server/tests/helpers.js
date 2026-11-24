@@ -1,4 +1,5 @@
 import { once } from 'node:events';
+import http from 'node:http';
 import { randomBytes, randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { createApp } from '../src/app.js';
@@ -74,6 +75,22 @@ function browserSession(baseUrl) {
     return res;
   }
   return { call, cookies };
+}
+
+// A GET with If-None-Match, to test 304 answers. fetch() cannot do this:
+// following the Fetch standard, a hand-set If-None-Match makes it add
+// "Cache-Control: no-cache", which rightly tells the server to send
+// everything again. node:http sends only the headers it is given.
+export function conditionalGet(url, etag, headers = {}) {
+  return new Promise((resolve, reject) => {
+    http
+      .get(url, { headers: { 'if-none-match': etag, ...headers } }, (res) => {
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) }));
+      })
+      .on('error', reject);
+  });
 }
 
 // Owns everything one test file creates, and deletes all of it in cleanup().

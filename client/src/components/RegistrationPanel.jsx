@@ -6,7 +6,6 @@ import { useNotifications } from '../context/NotificationsContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import { errorMessage } from '../utils/errors.js';
-import { AddToCalendarButton } from './AddToCalendarButton.jsx';
 import { ConfirmDialog } from './ConfirmDialog.jsx';
 
 // The register / join waitlist / cancel area of the event page.
@@ -112,7 +111,6 @@ function StudentRegistration({ event, onChanged }) {
             View ticket
           </Link>
         )}
-        <AddToCalendarButton registration={registration} />
         {registration.canCancel && (
           <button type="button" className="button button--danger-outline" onClick={() => setConfirmOpen(true)}>
             {isConfirmed ? 'Cancel registration' : 'Leave waitlist'}

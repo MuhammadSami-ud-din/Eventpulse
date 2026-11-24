@@ -88,6 +88,23 @@ from your own machine against the hosted database:
 NODE_ENV=development DATABASE_URL='mysql://…' npm run seed
 ```
 
+The seed generates the demo events' cover images with `pngjs`, a development
+dependency, so run it from a full `npm install` (not one with `--omit=dev`).
+
+## Images
+
+Profile photos and event covers are stored **in the database** (migrations
+009 and 010), not on disk, because most hosts wipe the file system on every
+deploy. There is nothing extra to configure, but keep in mind:
+
+- Each image is at most 1 MB, so the MySQL setting `max_allowed_packet` must
+  allow a little more than that. MySQL 8's default (64 MB) does; some managed
+  databases set it lower, so check if uploads fail with a database error.
+- Images count towards the database's size and backups.
+
+Updating an existing deployment: the pre-deploy `npm run migrate` applies the
+new migrations (009–011) automatically.
+
 ## Limits of a single instance
 
 Response caching and rate-limit counters live in the Node process's memory.

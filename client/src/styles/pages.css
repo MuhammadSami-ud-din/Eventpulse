@@ -196,45 +196,6 @@
   }
 }
 
-/* ---------- Event detail ---------- */
-.event-detail__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.event-detail__organizer {
-  color: var(--color-text-muted);
-}
-
-.event-detail__layout {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.event-detail__description {
-  white-space: pre-line;
-}
-
-.event-detail__aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-self: start;
-}
-
-@media (min-width: 56rem) {
-  .event-detail__layout {
-    grid-template-columns: 1fr 20rem;
-  }
-
-  .event-detail__aside {
-    position: sticky;
-    top: 5rem;
-  }
-}
-
 .facts {
   display: grid;
   gap: var(--space-3);
@@ -249,11 +210,6 @@
 .facts dd {
   margin: 0;
   font-weight: 600;
-}
-
-.rules {
-  padding-left: var(--space-5);
-  color: var(--color-text-muted);
 }
 
 .panel__status {
@@ -289,6 +245,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  overflow: hidden;
+}
+
+/* A thin strip of the event's cover along the top of the card. */
+.registration-card__cover {
+  height: 4.5rem;
+  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-2);
 }
 
 .registration-card--muted {
@@ -325,6 +288,12 @@
 .ticket .back-link {
   display: block;
   text-align: left;
+}
+
+.ticket__cover {
+  height: 7rem;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
 }
 
 .ticket__qr {
@@ -368,6 +337,11 @@
   gap: var(--space-2);
 }
 
+.notification__body {
+  flex: 1;
+  min-width: 0;
+}
+
 .notification--unread {
   border-left: 4px solid var(--color-primary);
 }
@@ -391,13 +365,12 @@
 @media (min-width: 40rem) {
   .notification {
     flex-direction: row;
-    justify-content: space-between;
     align-items: flex-start;
+    gap: var(--space-3);
   }
 }
 
 /* ---------- Profile ---------- */
 .profile-section {
-  max-width: 36rem;
   margin-bottom: var(--space-5);
 }

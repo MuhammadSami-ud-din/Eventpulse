@@ -40,3 +40,19 @@ export const formatDateBadge = (value) => ({
   month: shortMonthFormat.format(toDate(value)),
   day: dayFormat.format(toDate(value)),
 });
+
+// Time left until a moment, in the two largest units: "2 days 4 hours",
+// "3 hours 15 minutes", "12 minutes". Null once the moment has passed.
+export function formatCountdown(ms) {
+  if (ms <= 0) return null;
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 1) return 'less than a minute';
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const mins = minutes % 60;
+  const parts = [];
+  if (days) parts.push(pluralize(days, 'day'));
+  if (hours) parts.push(pluralize(hours, 'hour'));
+  if (mins && !days) parts.push(pluralize(mins, 'minute'));
+  return parts.slice(0, 2).join(' ');
+}

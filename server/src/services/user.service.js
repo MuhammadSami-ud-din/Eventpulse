@@ -1,9 +1,13 @@
 import { pool } from '../db/pool.js';
+import { imageUrl } from '../utils/imageUrl.js';
 
 // Every query that returns a user to the client selects these columns only,
-// so password_hash can never leak by accident.
+// so password_hash can never leak by accident. The avatar's timestamp (not
+// the image) comes along to build its URL. Use only with an unaliased
+// "FROM users", which the subquery refers to.
 export const PUBLIC_USER_COLUMNS = `
-  id, full_name, email, role, department, student_number, is_active, created_at`;
+  id, full_name, email, role, department, student_number, is_active, created_at,
+  (SELECT updated_at FROM user_avatars WHERE user_avatars.user_id = users.id) AS avatar_updated_at`;
 
 export function toPublicUser(row) {
   return {
@@ -15,6 +19,7 @@ export function toPublicUser(row) {
     studentNumber: row.student_number,
     isActive: Boolean(row.is_active),
     createdAt: row.created_at,
+    avatarUrl: imageUrl('avatar', row.id, row.avatar_updated_at),
   };
 }
 

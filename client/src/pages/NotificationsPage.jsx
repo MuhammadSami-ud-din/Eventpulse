@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../api/notifications.js';
+import { Avatar } from '../components/Avatar.jsx';
 import { Pagination } from '../components/Pagination.jsx';
 import { TableSkeleton } from '../components/Skeletons.jsx';
 import { EmptyState, ErrorState } from '../components/StateViews.jsx';
@@ -69,6 +70,16 @@ export function NotificationsPage() {
             const unread = !notification.readAt;
             return (
               <li key={notification.id} className={`card notification ${unread ? 'notification--unread' : ''}`}>
+                {notification.organizer && (
+                  <Avatar
+                    user={{
+                      id: notification.organizer.id,
+                      fullName: notification.organizer.name,
+                      avatarUrl: notification.organizer.avatarUrl,
+                    }}
+                    size={40}
+                  />
+                )}
                 <div className="notification__body">
                   <h2 className="notification__title">
                     {unread && <span className="visually-hidden">Unread: </span>}

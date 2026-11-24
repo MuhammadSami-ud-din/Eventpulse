@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
-import http from 'node:http';
 import { after, before, describe, test } from 'node:test';
-import { days, fromNow, hours, TestContext } from './helpers.js';
+import { conditionalGet, days, fromNow, hours, TestContext } from './helpers.js';
 
 const ctx = new TestContext();
 let categorySlug;
@@ -111,22 +110,6 @@ describe('filtering, sorting and paging', () => {
   });
 });
 
-// fetch() cannot test this: following the Fetch standard, a hand-set
-// If-None-Match makes it add "Cache-Control: no-cache", which rightly tells the
-// server to send everything again. node:http sends only what it is given.
-function conditionalGet(path, etag) {
-  const url = new URL(`${ctx.baseUrl}${path}`);
-  return new Promise((resolve, reject) => {
-    http
-      .get(url, { headers: { 'if-none-match': etag } }, (res) => {
-        let body = '';
-        res.on('data', (chunk) => (body += chunk));
-        res.on('end', () => resolve({ status: res.statusCode, body: body && JSON.parse(body) }));
-      })
-      .on('error', reject);
-  });
-}
-
 describe('caching', () => {
   test('an unchanged event answers 304; after a registration the new seat count comes back at once', async () => {
     const eventId = await ctx.createEvent({ capacity: 5 });
@@ -134,13 +117,13 @@ describe('caching', () => {
     const etag = first.headers.get('etag');
     assert.equal(first.headers.get('cache-control'), 'public, no-cache');
 
-    assert.equal((await conditionalGet(`/events/${eventId}`, etag)).status, 304);
+    assert.equal((await conditionalGet(`${ctx.baseUrl}/events/${eventId}`, etag)).status, 304);
 
     const [student] = await ctx.createStudents(1);
     await student.call('POST', `/events/${eventId}/registrations`);
-    const after = await conditionalGet(`/events/${eventId}`, etag);
+    const after = await conditionalGet(`${ctx.baseUrl}/events/${eventId}`, etag);
     assert.equal(after.status, 200, 'the server cache was invalidated');
-    assert.equal(after.body.event.seatsLeft, 4);
+    assert.equal(JSON.parse(after.body).event.seatsLeft, 4);
   });
 
   test('categories are public and include the slug used in filter links', async () => {

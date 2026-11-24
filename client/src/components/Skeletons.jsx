@@ -70,7 +70,7 @@ export function DetailSkeleton({ label }) {
   );
 }
 
-// Stat tiles over two chart panels, like the event stats and analytics pages.
+// Stat tiles over two panels, like the event stats and analytics pages.
 export function DashboardSkeleton({ label, tiles = 6 }) {
   return (
     <SkeletonRegion label={label}>

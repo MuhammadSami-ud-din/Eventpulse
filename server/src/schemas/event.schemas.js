@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { id, isoDateTime, paginationFields, text, wholeNumber } from './common.schemas.js';
+import { id, isoDateTime, optionalText, paginationFields, text, wholeNumber } from './common.schemas.js';
 
 const EVENT_STATUSES = ['draft', 'pending', 'published', 'rejected', 'closed'];
 
@@ -9,6 +9,30 @@ const DAY_MS = 24 * HOUR_MS;
 // month late) from becoming real events.
 const MAX_DAYS_AHEAD = 2 * 365;
 const MAX_DURATION_DAYS = 14;
+
+export const EVENT_DETAIL_LIMITS = { agendaItems: 20, speakers: 12, tags: 8 };
+
+const agendaItem = z.object({
+  time: z.string({ error: 'Add a time' }).regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use 24-hour time, e.g. 14:30'),
+  title: text({ min: 2, max: 120, tooShort: 'Add a title' }),
+  details: optionalText({ max: 300 }),
+});
+
+const speaker = z.object({
+  name: text({ min: 2, max: 100, tooShort: 'Add a name' }),
+  role: optionalText({ max: 100 }),
+});
+
+// A short label: letters (any script), digits, spaces and hyphens.
+const tag = text({ min: 2, max: 30, tooShort: 'Tags need at least 2 characters' }).refine(
+  (value) => /^[\p{L}\p{N}][\p{L}\p{N} -]*$/u.test(value),
+  'Tags can use letters, digits, spaces and hyphens',
+);
+
+const tagList = z
+  .array(tag)
+  .max(EVENT_DETAIL_LIMITS.tags, `At most ${EVENT_DETAIL_LIMITS.tags} tags`)
+  .refine((tags) => new Set(tags.map((value) => value.toLowerCase())).size === tags.length, 'Each tag only once');
 
 const eventFields = {
   title: text({ min: 3, max: 150, tooShort: 'Title is too short' }),
@@ -20,6 +44,14 @@ const eventFields = {
   registrationDeadline: isoDateTime,
   cancellationWindowHours: wholeNumber({ min: 0, max: 720 }),
   capacity: wholeNumber({ min: 1, max: 100000 }),
+  // Optional details for the event page. An empty string clears a text field.
+  tagline: optionalText({ max: 160 }),
+  agenda: z.array(agendaItem).max(EVENT_DETAIL_LIMITS.agendaItems, `At most ${EVENT_DETAIL_LIMITS.agendaItems} agenda items`),
+  speakers: z.array(speaker).max(EVENT_DETAIL_LIMITS.speakers, `At most ${EVENT_DETAIL_LIMITS.speakers} speakers or hosts`),
+  tags: tagList,
+  whatToBring: optionalText({ max: 500, multiline: true }),
+  entryNotes: optionalText({ max: 500, multiline: true }),
+  contact: optionalText({ max: 255 }),
 };
 
 // Shared by create (on the request body) and update (on the merged event),
@@ -43,7 +75,13 @@ export function scheduleIssues({ startsAt, endsAt, registrationDeadline }, now =
 }
 
 export const createEventSchema = z
-  .object({ ...eventFields, cancellationWindowHours: eventFields.cancellationWindowHours.default(24) })
+  .object({
+    ...eventFields,
+    cancellationWindowHours: eventFields.cancellationWindowHours.default(24),
+    agenda: eventFields.agenda.default([]),
+    speakers: eventFields.speakers.default([]),
+    tags: eventFields.tags.default([]),
+  })
   .superRefine((event, ctx) => {
     for (const issue of scheduleIssues(event)) {
       ctx.addIssue({ code: 'custom', path: [issue.field], message: issue.message });

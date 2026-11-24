@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router';
 import { fetchMyRegistration } from '../api/registrations.js';
 import { AddToCalendarButton } from '../components/AddToCalendarButton.jsx';
+import { EventCover } from '../components/EventCover.jsx';
 import { DetailSkeleton } from '../components/Skeletons.jsx';
 import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { TicketQr } from '../components/TicketQr.jsx';
@@ -30,6 +31,7 @@ export function TicketPage() {
       <Link to="/my/registrations" className="back-link">
         ← My registrations
       </Link>
+      <EventCover eventId={event.id} coverUrl={event.coverUrl} className="ticket__cover" />
       <h1 className="ticket__title">{event.title}</h1>
       <p>{formatEventTime(event.startsAt, event.endsAt)}</p>
       <p>{event.venue}</p>

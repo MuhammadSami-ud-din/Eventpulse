@@ -35,3 +35,7 @@ export const markAttendance = (eventId, registrationId, status) =>
 
 export const markRemainingNoShows = (id) =>
   api.post(`/organizer/events/${id}/attendance/no-shows`).then((res) => res.data.markedNoShow);
+
+export const uploadCover = (id, blob) =>
+  api.put(`/organizer/events/${id}/cover`, blob, { headers: { 'Content-Type': blob.type } }).then((res) => res.data.coverUrl);
+export const removeCover = (id) => api.delete(`/organizer/events/${id}/cover`);

@@ -1,5 +1,7 @@
+import { invalidateEvent } from '../services/cache.js';
 import * as eventManagement from '../services/eventManagement.service.js';
 import { csvFileName, exportRegistrationsCsv, getEventStats } from '../services/eventStats.service.js';
+import { removeImage, saveImage } from '../services/image.service.js';
 import { listEventRegistrations as queryEventRegistrations } from '../services/registrationQueries.service.js';
 import { withTimeFlags } from '../utils/eventTiming.js';
 
@@ -53,4 +55,19 @@ export async function exportRegistrations(req, res) {
     .type('text/csv; charset=utf-8')
     .attachment(csvFileName(event))
     .send(await exportRegistrationsCsv(event));
+}
+
+// getManagedEvent() checks the event exists and that this user may manage it.
+export async function uploadCover(req, res) {
+  const event = await eventManagement.getManagedEvent(req.user, req.validated.params.id);
+  const coverUrl = await saveImage('cover', event.id, req.body);
+  invalidateEvent(event.id);
+  res.json({ coverUrl });
+}
+
+export async function removeCover(req, res) {
+  const event = await eventManagement.getManagedEvent(req.user, req.validated.params.id);
+  await removeImage('cover', event.id);
+  invalidateEvent(event.id);
+  res.status(204).end();
 }

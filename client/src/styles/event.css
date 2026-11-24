@@ -1,0 +1,558 @@
+/* ---------- Covers and avatars ---------- */
+.cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.cover__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar--photo {
+  object-fit: cover;
+  background: var(--color-surface-muted);
+}
+
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ---------- Event page: hero ---------- */
+.hero {
+  position: relative;
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.hero__cover {
+  height: clamp(10rem, 28vw, 18rem);
+}
+
+/* A frosted panel overlapping the bottom of the cover. */
+.hero__body {
+  position: relative;
+  margin: -4rem var(--space-3) var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-card), inset 0 1px 0 var(--glass-highlight);
+}
+
+.hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.hero__title {
+  margin: 0 0 var(--space-1);
+}
+
+.hero__tagline {
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.hero__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+}
+
+.hero__facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Event page: layout, sections, register card ---------- */
+.event-page__layout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 64rem) {
+  .event-page__layout {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    align-items: start;
+  }
+
+  /* Stays in view while the details scroll past. */
+  .register-card {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.section-nav {
+  position: sticky;
+  top: 4.2rem;
+  z-index: 5;
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  padding: var(--space-1);
+  overflow-x: auto;
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.section-nav a {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.section-nav a:hover {
+  background: var(--color-glass-hover);
+  color: var(--color-text);
+}
+
+.event-section {
+  /* Jumping to a section leaves room for the sticky bars above it. */
+  scroll-margin-top: 8rem;
+  margin-bottom: var(--space-6);
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0 0 var(--space-3);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--space-5);
+}
+
+.agenda {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 2px solid var(--color-border);
+}
+
+.agenda__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-4) var(--space-4);
+}
+
+/* A dot on the timeline for each item. */
+.agenda__item::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0.35rem;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.agenda__time {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.agenda__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.agenda__details {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+}
+
+.speakers {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 40rem) {
+  .speakers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.speaker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.speaker__name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.speaker__role {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.details-list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.details-list dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.details-list dd {
+  margin: var(--space-1) 0 0;
+}
+
+.details-list__multiline {
+  white-space: pre-line;
+}
+
+.register-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.register-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.register-card__title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.register-card__subtitle {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}
+
+.register-card__countdown {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.register-card__deadline {
+  color: var(--color-text-muted);
+}
+
+.register-card__rules ul {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.register-card__share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.related {
+  margin-top: var(--space-6);
+}
+
+/* ---------- Editor: form + live preview ---------- */
+.editor {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 80rem) {
+  .editor {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .editor__preview {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+  }
+}
+
+.editor__preview-title {
+  margin-bottom: 0;
+}
+
+.preview {
+  padding: var(--space-3);
+}
+
+.preview .section-nav {
+  position: static;
+}
+
+.event-form__section + .event-form__section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.event-form__heading {
+  font-size: 1.1rem;
+}
+
+.cover-editor {
+  margin-bottom: var(--space-5);
+}
+
+.cover-editor__preview {
+  width: 22rem;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+}
+
+/* ---------- List editor (agenda, speakers) ---------- */
+.list-editor {
+  /* Rows lay out by the width of the form, not the window: the form is
+     narrower when the live preview sits beside it. */
+  container-type: inline-size;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.list-editor:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+.list-editor__items {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.list-editor__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: var(--space-2);
+  align-items: end;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.list-editor__field--lg {
+  grid-column: span 2;
+}
+
+.list-editor__remove {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+@container (min-width: 40rem) {
+  .list-editor__row {
+    grid-template-columns: 7rem repeat(2, minmax(0, 1fr)) auto;
+  }
+
+  .list-editor__field--lg {
+    grid-column: auto;
+  }
+
+  .list-editor__remove {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+.list-editor__label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ---------- Image uploader ---------- */
+.uploader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.uploader__preview {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.uploader__controls {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.uploader__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- Profile ---------- */
+.profile-hero {
+  display: grid;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 56rem) {
+  .profile-hero {
+    grid-template-columns: minmax(16rem, 22rem) 1fr;
+    align-items: center;
+  }
+}
+
+.profile-hero .uploader {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-hero__name {
+  margin-bottom: var(--space-2);
+}
+
+.profile-hero__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+}
+
+.profile-hero__facts dt {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.profile-hero__facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.stat-grid--four {
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 56rem) {
+  .stat-grid.stat-grid--four {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.profile__columns {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 64rem) {
+  .profile__columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.profile-subheading {
+  margin: 0 0 var(--space-3);
+  font-size: 1rem;
+}
+
+.mini-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mini-list__item {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.mini-list__title {
+  font-weight: 600;
+}
+
+.mini-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.check-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.check-list li + li {
+  margin-top: var(--space-1);
+}

@@ -214,6 +214,10 @@ describe('no route answers hostile input with a server error', () => {
     ['PUT', '/admin/users/:id/status'],
     ['PUT', '/admin/categories/:id'],
     ['DELETE', '/admin/categories/:id'],
+    ['GET', '/images/avatars/:id'],
+    ['GET', '/images/covers/:id'],
+    ['PUT', '/organizer/events/:id/cover'],
+    ['DELETE', '/organizer/events/:id/cover'],
   ];
   const BODY_ROUTES = [
     ['POST', '/auth/login'],
@@ -226,6 +230,7 @@ describe('no route answers hostile input with a server error', () => {
     ['POST', '/admin/users'],
     ['POST', '/admin/categories'],
     ['POST', `/admin/events/{event}/reject`],
+    ['PUT', '/account/avatar'],
   ];
   const QUERY_ROUTES = ['/events', '/me/registrations', '/notifications', '/organizer/events', '/admin/users', '/admin/analytics', `/organizer/events/{event}/stats`];
   const HOSTILE_QUERIES = ['page=-1', 'pageSize=1000000', 'sort=__proto__', 'status[]=x', 'q=%00%27%22', `q=${'x'.repeat(5000)}`, 'from=not-a-date', 'utcOffsetMinutes=1e9', 'scope=everything', 'eventId=0x1'];

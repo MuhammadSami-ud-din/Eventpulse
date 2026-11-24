@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { exportRegistrationsCsv, fetchEventRegistrations, markAttendance, markRemainingNoShows } from '../../api/organizer.js';
+import { Avatar } from '../../components/Avatar.jsx';
 import { Badge } from '../../components/Badge.jsx';
 import { ManagedEventGate } from '../../components/ManagedEventGate.jsx';
 import { OrganizerEventHeader } from '../../components/OrganizerEventHeader.jsx';
@@ -181,8 +182,13 @@ function RegistrationsTable({ event }) {
                 {list.data.data.map((registration) => (
                   <tr key={registration.id}>
                     <td>
-                      <span className="table__primary">{registration.student.fullName}</span>
-                      <span className="table__secondary">{registration.student.email}</span>
+                      <div className="person-cell">
+                        <Avatar user={registration.student} size={32} />
+                        <div>
+                          <span className="table__primary">{registration.student.fullName}</span>
+                          <span className="table__secondary">{registration.student.email}</span>
+                        </div>
+                      </div>
                     </td>
                     <td>{registration.student.studentNumber ?? '—'}</td>
                     <td>
