@@ -17,9 +17,9 @@ export function RegistrationCard({ registration, onCancel }) {
         </Badge>
         {attendance && <Badge tone={ATTENDANCE_STATUS[attendance.status].tone}>{ATTENDANCE_STATUS[attendance.status].label}</Badge>}
       </div>
-      <h3 className="registration-card__title">
+      <h2 className="registration-card__title">
         <Link to={`/events/${event.id}`}>{event.title}</Link>
-      </h3>
+      </h2>
       <p className="registration-card__detail">{formatEventTime(event.startsAt, event.endsAt)}</p>
       <p className="registration-card__detail">{event.venue}</p>
       {isActive && (

@@ -6,8 +6,9 @@ import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { ManagedEventGate } from '../../components/ManagedEventGate.jsx';
 import { OrganizerEventHeader } from '../../components/OrganizerEventHeader.jsx';
 import { RegistrationsChart } from '../../components/RegistrationsChart.jsx';
+import { DashboardSkeleton } from '../../components/Skeletons.jsx';
+import { ErrorState } from '../../components/StateViews.jsx';
 import { StatTile } from '../../components/StatTile.jsx';
-import { ErrorState, Loading } from '../../components/StateViews.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
@@ -49,7 +50,7 @@ const ACTION_SUCCESS = {
 
 function EventStats({ event }) {
   const { data: stats, error, isLoading, reload } = useAsync((signal) => fetchEventStats(event.id, { signal }), [event.id]);
-  if (isLoading) return <Loading label="Loading stats…" />;
+  if (isLoading) return <DashboardSkeleton label="Loading stats…" />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   return (

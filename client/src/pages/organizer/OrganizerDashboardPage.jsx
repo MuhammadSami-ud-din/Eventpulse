@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router';
 import { fetchManagedEvents } from '../../api/organizer.js';
 import { Badge } from '../../components/Badge.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../../components/StateViews.jsx';
+import { TableSkeleton } from '../../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../../components/StateViews.jsx';
+import { TableWrap } from '../../components/TableWrap.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue.js';
@@ -82,7 +84,7 @@ export function OrganizerDashboardPage() {
         </div>
       </div>
 
-      {events.isLoading && <Loading label="Loading events…" />}
+      {events.isLoading && <TableSkeleton label="Loading events…" columns={5} />}
       {events.error && <ErrorState error={events.error} onRetry={events.reload} />}
       {events.data && events.data.data.length === 0 && (
         <EmptyState
@@ -93,7 +95,7 @@ export function OrganizerDashboardPage() {
       )}
       {events.data && events.data.data.length > 0 && (
         <>
-          <div className="table-wrap" aria-busy={events.isFetching}>
+          <TableWrap label="Your events" busy={events.isFetching}>
             <table className="table">
               <thead>
                 <tr>
@@ -126,7 +128,7 @@ export function OrganizerDashboardPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableWrap>
           <Pagination pagination={events.data.pagination} onPageChange={(next) => setFilter({ page: String(next) })} />
         </>
       )}

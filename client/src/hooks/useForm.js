@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fieldErrors } from '../utils/errors.js';
 import { validateForm } from '../utils/validation.js';
 
@@ -8,11 +8,28 @@ import { validateForm } from '../utils/validation.js';
 // - after that, errors update on every keystroke, so a fixed field clears at once.
 // (Validating on blur shows an error the moment the user clicks "Submit", which
 // pushes the button down and swallows the click.)
+// A failed submit moves focus to the first invalid field, so keyboard and
+// screen-reader users land on the problem and hear its error message.
 export function useForm(initialValues, schema) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const inputs = useRef({});
+  const [focusRequest, setFocusRequest] = useState(null);
+
+  // Runs after the render that shows the errors, so the field is already
+  // marked invalid (and described by its error) when it receives focus.
+  useEffect(() => {
+    if (focusRequest) inputs.current[focusRequest.field]?.focus();
+  }, [focusRequest]);
+
+  // Field order in `values` is the order on screen.
+  function focusFirstError(errorsByField) {
+    const field = Object.keys(values).find((name) => errorsByField[name]);
+    // A new object each time, so a second failed submit focuses again.
+    if (field) setFocusRequest({ field });
+  }
 
   function handleChange(e) {
     const next = { ...values, [e.target.name]: e.target.value };
@@ -27,14 +44,19 @@ export function useForm(initialValues, schema) {
     setAttempted(true);
     const clientErrors = validateForm(values, schema);
     setErrors(clientErrors);
-    if (Object.keys(clientErrors).length) return false;
+    if (Object.keys(clientErrors).length) {
+      focusFirstError(clientErrors);
+      return false;
+    }
 
     setSubmitting(true);
     try {
       await submit(values);
       return true;
     } catch (error) {
-      setErrors(fieldErrors(error));
+      const serverErrors = fieldErrors(error);
+      setErrors(serverErrors);
+      focusFirstError(serverErrors);
       throw error;
     } finally {
       setSubmitting(false);
@@ -47,7 +69,16 @@ export function useForm(initialValues, schema) {
     setAttempted(false);
   }
 
-  const field = (name) => ({ name, value: values[name], onChange: handleChange, error: errors[name] });
+  // `ref` reaches the <input> through FormField's props (React 19 passes refs as props).
+  const field = (name) => ({
+    name,
+    value: values[name],
+    onChange: handleChange,
+    error: errors[name],
+    ref: (element) => {
+      inputs.current[name] = element;
+    },
+  });
 
   return { values, field, submitWith, submitting, reset };
 }

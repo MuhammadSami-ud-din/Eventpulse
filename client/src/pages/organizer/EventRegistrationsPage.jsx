@@ -4,7 +4,9 @@ import { Badge } from '../../components/Badge.jsx';
 import { ManagedEventGate } from '../../components/ManagedEventGate.jsx';
 import { OrganizerEventHeader } from '../../components/OrganizerEventHeader.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../../components/StateViews.jsx';
+import { TableSkeleton } from '../../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../../components/StateViews.jsx';
+import { TableWrap } from '../../components/TableWrap.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue.js';
@@ -155,14 +157,14 @@ function RegistrationsTable({ event }) {
           {counts.confirmed} confirmed · {counts.waitlisted} waitlisted · {counts.cancelled} cancelled
         </p>
       )}
-      {list.isLoading && <Loading label="Loading registrations…" />}
+      {list.isLoading && <TableSkeleton label="Loading registrations…" columns={5} />}
       {list.error && <ErrorState error={list.error} onRetry={list.reload} />}
       {list.data && list.data.data.length === 0 && (
         <EmptyState title="No registrations found" message={q || status ? 'Try another search or filter.' : 'Nobody has registered yet.'} />
       )}
       {list.data && list.data.data.length > 0 && (
         <>
-          <div className="table-wrap" aria-busy={list.isFetching}>
+          <TableWrap label="Registrations" busy={list.isFetching}>
             <table className="table">
               <thead>
                 <tr>
@@ -196,7 +198,7 @@ function RegistrationsTable({ event }) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableWrap>
           <Pagination pagination={list.data.pagination} onPageChange={setPage} />
         </>
       )}

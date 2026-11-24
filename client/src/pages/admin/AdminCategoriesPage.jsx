@@ -3,7 +3,9 @@ import { createCategory, deleteCategory, fetchAdminCategories, updateCategory } 
 import { AdminNav } from '../../components/AdminNav.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { FormField } from '../../components/FormField.jsx';
-import { EmptyState, ErrorState, Loading } from '../../components/StateViews.jsx';
+import { TableSkeleton } from '../../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../../components/StateViews.jsx';
+import { TableWrap } from '../../components/TableWrap.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
@@ -117,11 +119,11 @@ export function AdminCategoriesPage() {
         />
 
         <div>
-          {categories.isLoading && <Loading label="Loading categories…" />}
+          {categories.isLoading && <TableSkeleton label="Loading categories…" columns={3} />}
           {categories.error && <ErrorState error={categories.error} onRetry={categories.reload} />}
           {categories.data?.length === 0 && <EmptyState title="No categories yet" message="Add the first one." />}
           {categories.data?.length > 0 && (
-            <div className="table-wrap" aria-busy={categories.isFetching}>
+            <TableWrap label="Categories" busy={categories.isFetching}>
               <table className="table">
                 <thead>
                   <tr>
@@ -168,7 +170,7 @@ export function AdminCategoriesPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableWrap>
           )}
           {categories.data?.length > 0 && (
             <p className="field__hint">

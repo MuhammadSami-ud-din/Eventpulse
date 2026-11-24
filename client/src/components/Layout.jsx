@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNotifications } from '../context/NotificationsContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useTheme } from '../hooks/useTheme.js';
 
 function NavItem({ to, children }) {
   return (
@@ -14,6 +15,41 @@ function NavItem({ to, children }) {
   );
 }
 
+// A moon in light mode, a sun in dark mode. Purely decorative: the button's
+// name stays "Dark theme" and aria-pressed says whether it is on.
+function ThemeIcon({ dark }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      {dark ? (
+        <>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </>
+      ) : (
+        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+      )}
+    </svg>
+  );
+}
+
+// After following a link, start at the top of the new page and move focus to
+// its content, so keyboard and screen-reader users are not left on the link
+// they clicked. Back/forward keeps the browser's own position. Only the path
+// counts: typing in a search box (which changes ?q=) must not move focus.
+function useFocusOnNavigation(mainRef) {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const previousPath = useRef(location.pathname);
+
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return;
+    previousPath.current = location.pathname;
+    if (navigationType === 'POP') return;
+    window.scrollTo(0, 0);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.pathname, navigationType, mainRef]);
+}
+
 export function Layout() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
@@ -21,6 +57,9 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const mainRef = useRef(null);
+  useFocusOnNavigation(mainRef);
 
   // Close the mobile menu after navigating.
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -41,15 +80,27 @@ export function Layout() {
           <Link to="/" className="brand">
             EventPulse
           </Link>
-          <button
-            type="button"
-            className="menu-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="main-nav"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            Menu
-          </button>
+          <div className="header__tools">
+            <button
+              type="button"
+              className="icon-button"
+              aria-pressed={theme === 'dark'}
+              title="Dark theme"
+              onClick={toggleTheme}
+            >
+              <ThemeIcon dark={theme === 'dark'} />
+              <span className="visually-hidden">Dark theme</span>
+            </button>
+            <button
+              type="button"
+              className="menu-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="main-nav"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              Menu
+            </button>
+          </div>
           <nav id="main-nav" className={`nav ${menuOpen ? 'nav--open' : ''}`} aria-label="Main">
             <ul className="nav__list">
               <NavItem to="/">Events</NavItem>
@@ -89,7 +140,7 @@ export function Layout() {
           </nav>
         </div>
       </header>
-      <main id="main" className="main" tabIndex={-1}>
+      <main id="main" ref={mainRef} className="main" tabIndex={-1}>
         <Outlet />
       </main>
       <footer className="footer">EventPulse · Campus events, without the queue.</footer>

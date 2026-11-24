@@ -1,12 +1,13 @@
 import { Link, useParams } from 'react-router';
 import { fetchMyRegistration } from '../api/registrations.js';
 import { AddToCalendarButton } from '../components/AddToCalendarButton.jsx';
-import { EmptyState, ErrorState, Loading } from '../components/StateViews.jsx';
+import { DetailSkeleton } from '../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { TicketQr } from '../components/TicketQr.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
-import { REGISTRATION_STATUS } from '../utils/eventStatus.js';
 import { errorCode } from '../utils/errors.js';
+import { REGISTRATION_STATUS } from '../utils/eventStatus.js';
 import { formatEventTime, formatTicketCode } from '../utils/format.js';
 
 export function TicketPage() {
@@ -17,7 +18,7 @@ export function TicketPage() {
   );
   useDocumentTitle('Ticket');
 
-  if (isLoading) return <Loading label="Loading ticket…" />;
+  if (isLoading) return <DetailSkeleton label="Loading ticket…" />;
   if (['REGISTRATION_NOT_FOUND', 'VALIDATION_ERROR'].includes(errorCode(error))) {
     return <EmptyState title="Ticket not found" action={<Link to="/my/registrations" className="button">My registrations</Link>} />;
   }

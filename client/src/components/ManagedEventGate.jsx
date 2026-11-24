@@ -2,7 +2,8 @@ import { Link, useParams } from 'react-router';
 import { fetchManagedEvent } from '../api/organizer.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { errorCode } from '../utils/errors.js';
-import { EmptyState, ErrorState, Loading } from './StateViews.jsx';
+import { DetailSkeleton } from './Skeletons.jsx';
+import { EmptyState, ErrorState } from './StateViews.jsx';
 
 const NOT_YOURS = new Set(['EVENT_NOT_FOUND', 'FORBIDDEN', 'VALIDATION_ERROR']);
 
@@ -12,7 +13,7 @@ export function ManagedEventGate({ children }) {
   const { id } = useParams();
   const { data: event, error, isLoading, reload } = useAsync((signal) => fetchManagedEvent(id, { signal }), [id]);
 
-  if (isLoading) return <Loading label="Loading event…" />;
+  if (isLoading) return <DetailSkeleton label="Loading event…" />;
   if (NOT_YOURS.has(errorCode(error))) {
     return (
       <EmptyState

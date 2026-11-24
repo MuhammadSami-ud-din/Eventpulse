@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router';
 import { cancelRegistration, fetchMyRegistrations } from '../api/registrations.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { RegistrationCard } from '../components/RegistrationCard.jsx';
-import { EmptyState, ErrorState, Loading } from '../components/StateViews.jsx';
+import { CardListSkeleton } from '../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { useNotifications } from '../context/NotificationsContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useAsync } from '../hooks/useAsync.js';
@@ -60,7 +61,7 @@ export function MyRegistrationsPage() {
         ))}
       </div>
 
-      {isLoading && <Loading label="Loading your registrations…" />}
+      {isLoading && <CardListSkeleton label="Loading your registrations…" className="registration-list" count={3} />}
       {error && <ErrorState error={error} onRetry={reload} />}
       {data && data.length === 0 && (
         <EmptyState

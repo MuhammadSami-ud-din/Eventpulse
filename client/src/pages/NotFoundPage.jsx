@@ -7,6 +7,7 @@ export function NotFoundPage() {
   return (
     <EmptyState
       title="Page not found"
+      headingLevel={1}
       message="The page you’re looking for doesn’t exist."
       action={<Link to="/" className="button button--primary">Back to events</Link>}
     />

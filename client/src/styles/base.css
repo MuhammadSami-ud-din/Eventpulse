@@ -17,6 +17,20 @@ body {
   background: var(--color-bg);
 }
 
+/* Two soft glows behind everything, which the glass panels pick up. A fixed
+   pseudo-element rather than background-attachment: fixed, which makes phones
+   repaint the whole background on every scroll. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 10% -10%, var(--bg-glow-1), transparent 70%),
+    radial-gradient(50rem 36rem at 100% 0%, var(--bg-glow-2), transparent 70%);
+}
+
 h1,
 h2,
 h3 {
@@ -88,8 +102,16 @@ img {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--color-glass-border);
+}
+
+.header__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .header__inner {
@@ -161,7 +183,7 @@ img {
   padding: 0 var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-danger);
-  color: #fff;
+  color: var(--color-on-danger);
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
@@ -196,6 +218,11 @@ img {
     display: none;
   }
 
+  /* Pushes the toggle and the nav to the right, keeping DOM order = visual order. */
+  .header__tools {
+    margin-left: auto;
+  }
+
   .nav {
     display: flex;
     width: auto;
@@ -206,5 +233,28 @@ img {
 
   .nav__list {
     flex-direction: row;
+  }
+}
+
+/* ---------- Motion and transparency preferences ---------- */
+
+/* Blur only helps where content scrolls underneath (header, dialogs, toasts).
+   Without backdrop-filter support those panels become solid. */
+@supports not (backdrop-filter: blur(1px)) {
+  .header {
+    background: var(--color-surface);
+  }
+}
+
+/* Animations become instant, but still run once, so code waiting for an
+   animation to finish keeps working. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

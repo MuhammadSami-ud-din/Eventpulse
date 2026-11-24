@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../api/notifications.js';
 import { Pagination } from '../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../components/StateViews.jsx';
+import { TableSkeleton } from '../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { useNotifications } from '../context/NotificationsContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useAsync } from '../hooks/useAsync.js';
@@ -47,7 +48,7 @@ export function NotificationsPage() {
     }
   }
 
-  if (isLoading) return <Loading label="Loading notifications…" />;
+  if (isLoading) return <TableSkeleton label="Loading notifications…" rows={5} columns={1} />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   return (

@@ -1,28 +1,50 @@
-/* Design tokens. Components only use these variables, so themes (Stage 9)
-   change the look by redefining them in one place. */
+/* Design tokens. Components only use these variables, so a theme is just a
+   second set of values. public/theme-init.js sets data-theme="light" or
+   "dark" on <html> before the first paint.
+
+   Every text/background pair below meets WCAG AA (4.5:1), and input borders
+   and the focus ring meet 3:1 against their background, in both themes. */
 :root {
+  color-scheme: light;
+
   --color-bg: #f5f7fb;
   --color-surface: #ffffff;
   --color-surface-muted: #eef1f7;
   --color-border: #d9deea;
+  /* Edges people must see to find a control (inputs, selects). */
+  --color-border-strong: #8590a6;
   --color-text: #1b2333;
   --color-text-muted: #556078;
   --color-primary: #3a4fd8;
   --color-primary-hover: #2f41b8;
   --color-on-primary: #ffffff;
-  --color-focus: #f5a524;
+  --color-focus: #b85a00;
 
+  --color-success: #1f9d57;
   --color-success-bg: #e3f6ec;
   --color-success-text: #116a3a;
   --color-warning-bg: #fff1d6;
   --color-warning-text: #8a5300;
   --color-danger: #c62f3b;
+  --color-on-danger: #ffffff;
   --color-danger-bg: #fde7e9;
   --color-danger-text: #a3202b;
   --color-neutral-bg: #e9ecf3;
   --color-neutral-text: #3d465a;
 
-  /* Chart series colours (validated for colour-blind separation; see AttendanceBar). */
+  /* Glass: translucent panels over the soft background glow. Opaque enough
+     that text contrast is the same as on a solid surface. */
+  --color-glass: rgb(255 255 255 / 78%);
+  --color-glass-strong: rgb(255 255 255 / 88%);
+  --color-glass-border: rgb(205 212 228 / 80%);
+  --glass-blur: blur(14px) saturate(160%);
+  --bg-glow-1: rgb(58 79 216 / 14%);
+  --bg-glow-2: rgb(235 104 52 / 9%);
+
+  --color-skeleton: #e3e8f1;
+  --color-skeleton-shine: rgb(255 255 255 / 70%);
+
+  /* Chart series colours, validated for colour-blind separation per theme. */
   --series-1: #2a78d6;
   --series-2: #eb6834;
 
@@ -43,5 +65,60 @@
   --space-7: 3rem;
 
   --shadow-card: 0 1px 2px rgb(20 30 60 / 6%), 0 4px 16px rgb(20 30 60 / 6%);
+  --shadow-float: 0 8px 32px rgb(20 30 60 / 18%);
   --content-width: 72rem;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #0e131d;
+  --color-surface: #171e2c;
+  --color-surface-muted: #212a3b;
+  --color-border: #2c3548;
+  --color-border-strong: #6e7a93;
+  --color-text: #e7ebf3;
+  --color-text-muted: #a3adc2;
+  --color-primary: #8c9bff;
+  --color-primary-hover: #a7b3ff;
+  --color-on-primary: #0e131d;
+  --color-focus: #ffb547;
+
+  --color-success: #4cc685;
+  --color-success-bg: #123222;
+  --color-success-text: #7ee0a8;
+  --color-warning-bg: #3a2a0c;
+  --color-warning-text: #ffcd73;
+  --color-danger: #ef5a66;
+  --color-on-danger: #0e131d;
+  --color-danger-bg: #3d161b;
+  --color-danger-text: #ff9aa2;
+  --color-neutral-bg: #2a3345;
+  --color-neutral-text: #c9d0de;
+
+  --color-glass: rgb(23 30 44 / 78%);
+  --color-glass-strong: rgb(23 30 44 / 90%);
+  --color-glass-border: rgb(255 255 255 / 8%);
+  --bg-glow-1: rgb(140 155 255 / 13%);
+  --bg-glow-2: rgb(217 89 38 / 8%);
+
+  --color-skeleton: #222b3c;
+  --color-skeleton-shine: rgb(255 255 255 / 6%);
+
+  /* The dark-mode steps of the same two hues, validated against --color-surface. */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 22%);
+  --shadow-float: 0 10px 36px rgb(0 0 0 / 45%);
+}
+
+/* People who ask the system for less transparency get solid panels. */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-theme] {
+    --color-glass: var(--color-surface);
+    --color-glass-strong: var(--color-surface);
+    --glass-blur: none;
+  }
 }

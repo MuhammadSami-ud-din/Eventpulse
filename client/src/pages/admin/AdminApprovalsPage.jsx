@@ -6,7 +6,8 @@ import { AdminNav } from '../../components/AdminNav.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { FormField } from '../../components/FormField.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../../components/StateViews.jsx';
+import { CardListSkeleton } from '../../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
@@ -71,7 +72,7 @@ export function AdminApprovalsPage() {
     <>
       <h1>Admin</h1>
       <AdminNav />
-      {pending.isLoading && <Loading label="Loading pending events…" />}
+      {pending.isLoading && <CardListSkeleton label="Loading pending events…" className="approval-list" count={3} />}
       {pending.error && <ErrorState error={pending.error} onRetry={pending.reload} />}
       {pending.data && pending.data.data.length === 0 && (
         <EmptyState title="All caught up" message="There are no events waiting for approval." />

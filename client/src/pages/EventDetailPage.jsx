@@ -3,12 +3,13 @@ import { fetchEvent } from '../api/events.js';
 import { Badge } from '../components/Badge.jsx';
 import { RegistrationPanel } from '../components/RegistrationPanel.jsx';
 import { SeatMeter } from '../components/SeatMeter.jsx';
-import { EmptyState, ErrorState, Loading } from '../components/StateViews.jsx';
+import { DetailSkeleton } from '../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
 import { usePolling } from '../hooks/usePolling.js';
-import { eventAvailability } from '../utils/eventStatus.js';
 import { errorCode } from '../utils/errors.js';
+import { eventAvailability } from '../utils/eventStatus.js';
 import { formatDateTime, formatEventTime, pluralize } from '../utils/format.js';
 
 // Seat counts change as other students register; the server answers unchanged
@@ -21,7 +22,7 @@ export function EventDetailPage() {
   useDocumentTitle(event?.title ?? 'Event');
   usePolling(reload, SEAT_REFRESH_MS, Boolean(event) && !event.isPast);
 
-  if (isLoading) return <Loading label="Loading event…" />;
+  if (isLoading) return <DetailSkeleton label="Loading event…" />;
   if (['EVENT_NOT_FOUND', 'VALIDATION_ERROR'].includes(errorCode(error))) {
     return (
       <EmptyState

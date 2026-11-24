@@ -9,10 +9,13 @@ export function Loading({ label = 'Loading…' }) {
   );
 }
 
-export function EmptyState({ title, message, action }) {
+// `headingLevel` is 1 when the empty state is the whole page (e.g. 404),
+// so every page still has exactly one main heading.
+export function EmptyState({ title, message, action, headingLevel = 2 }) {
+  const Heading = `h${headingLevel}`;
   return (
     <div className="state">
-      <h2 className="state__title">{title}</h2>
+      <Heading className="state__title">{title}</Heading>
       {message && <p className="state__message">{message}</p>}
       {action}
     </div>

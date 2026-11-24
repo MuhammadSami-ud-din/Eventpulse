@@ -4,7 +4,8 @@ import { fetchCategories, fetchEvents } from '../api/events.js';
 import { CategoryChips } from '../components/CategoryChips.jsx';
 import { EventCard } from '../components/EventCard.jsx';
 import { Pagination } from '../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../components/StateViews.jsx';
+import { CardListSkeleton } from '../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js';
@@ -186,7 +187,7 @@ export function HomePage() {
 }
 
 function EventResults({ events, hasFilters, onClear, onPageChange }) {
-  if (events.isLoading) return <Loading label="Loading events…" />;
+  if (events.isLoading) return <CardListSkeleton label="Loading events…" className="event-grid" />;
   if (events.error) return <ErrorState error={events.error} onRetry={events.reload} />;
   if (!events.data) return null;
 

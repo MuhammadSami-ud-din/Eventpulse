@@ -4,8 +4,10 @@ import { AdminNav } from '../../components/AdminNav.jsx';
 import { AttendanceBar } from '../../components/AttendanceBar.jsx';
 import { CategoryDemand } from '../../components/CategoryDemand.jsx';
 import { ColumnChart } from '../../components/ColumnChart.jsx';
+import { DashboardSkeleton } from '../../components/Skeletons.jsx';
+import { ErrorState } from '../../components/StateViews.jsx';
 import { StatTile } from '../../components/StatTile.jsx';
-import { ErrorState, Loading } from '../../components/StateViews.jsx';
+import { TableWrap } from '../../components/TableWrap.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { formatDate, formatMonth, formatRate, formatShortMonth, pluralize } from '../../utils/format.js';
@@ -13,7 +15,7 @@ import { formatDate, formatMonth, formatRate, formatShortMonth, pluralize } from
 function TopEventsTable({ events }) {
   if (events.length === 0) return <p className="chart__empty">No upcoming published events.</p>;
   return (
-    <div className="table-wrap">
+    <TableWrap label="Most in-demand upcoming events">
       <table className="table">
         <caption className="table__caption">Most in-demand upcoming events</caption>
         <thead>
@@ -43,7 +45,7 @@ function TopEventsTable({ events }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </TableWrap>
   );
 }
 
@@ -55,7 +57,7 @@ export function AdminAnalyticsPage() {
     <>
       <h1>Admin</h1>
       <AdminNav />
-      {isLoading && <Loading label="Loading analytics…" />}
+      {isLoading && <DashboardSkeleton label="Loading analytics…" />}
       {error && <ErrorState error={error} onRetry={reload} />}
       {data && <AnalyticsReport data={data} />}
     </>

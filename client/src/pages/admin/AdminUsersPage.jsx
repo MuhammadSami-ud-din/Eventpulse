@@ -5,7 +5,9 @@ import { AdminNav } from '../../components/AdminNav.jsx';
 import { Badge } from '../../components/Badge.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
-import { EmptyState, ErrorState, Loading } from '../../components/StateViews.jsx';
+import { TableSkeleton } from '../../components/Skeletons.jsx';
+import { EmptyState, ErrorState } from '../../components/StateViews.jsx';
+import { TableWrap } from '../../components/TableWrap.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
@@ -150,7 +152,7 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {users.isLoading && <Loading label="Loading users…" />}
+      {users.isLoading && <TableSkeleton label="Loading users…" columns={6} />}
       {users.error && <ErrorState error={users.error} onRetry={users.reload} />}
       {users.data && users.data.data.length === 0 && <EmptyState title="No users found" message="Try another search." />}
       {users.data && users.data.data.length > 0 && (
@@ -158,7 +160,7 @@ export function AdminUsersPage() {
           <p className="results-count" role="status">
             {pluralize(users.data.pagination.total, 'user')}
           </p>
-          <div className="table-wrap" aria-busy={users.isFetching}>
+          <TableWrap label="Users" busy={users.isFetching}>
             <table className="table">
               <thead>
                 <tr>
@@ -232,7 +234,7 @@ export function AdminUsersPage() {
                 })}
               </tbody>
             </table>
-          </div>
+          </TableWrap>
           <Pagination pagination={users.data.pagination} onPageChange={setPage} />
         </>
       )}
