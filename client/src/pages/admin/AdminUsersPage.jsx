@@ -118,6 +118,7 @@ export function AdminUsersPage() {
             type="search"
             className="field__control"
             placeholder="Name, email or student number"
+            maxLength={100}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);

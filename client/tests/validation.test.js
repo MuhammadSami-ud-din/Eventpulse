@@ -32,4 +32,16 @@ describe('form validation', () => {
     assert.ok(rules.fullName(' A '));
     assert.equal(rules.fullName('Ayesha Khan'), null);
   });
+
+  test('text must be visible: no hidden control characters, and some letters or digits', () => {
+    const rule = rules.plainText('Name');
+    assert.equal(rule('Ali Hassan'), null);
+    assert.equal(rule('علی حسن'), null, 'any script');
+    assert.equal(rule(''), null, 'emptiness is left to the "required" rule');
+    assert.equal(rule('Line one\nLine two'), null, 'line breaks are fine in long text');
+    assert.match(rule('\u202Enoitpo'), /hidden control characters/);
+    assert.match(rule('Ali\u0000'), /hidden control characters/);
+    assert.match(rule('\u200B\u200B\u200B'), /letters or digits/);
+    assert.match(rules.fullName('—…—'), /letters or digits/);
+  });
 });

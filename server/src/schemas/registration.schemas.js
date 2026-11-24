@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { paginationFields } from './common.schemas.js';
+import { idText, paginationFields } from './common.schemas.js';
 
 const REGISTRATION_STATUSES = ['confirmed', 'waitlisted', 'cancelled'];
 
 export const myRegistrationsQuerySchema = z.object({
-  eventId: z.coerce.number().int().positive().optional(),
+  eventId: idText.optional(),
   scope: z.enum(['upcoming', 'past', 'all']).default('all'),
   status: z.enum(REGISTRATION_STATUSES).optional(),
 });

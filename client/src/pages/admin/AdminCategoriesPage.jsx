@@ -19,11 +19,12 @@ import { rules } from '../../utils/validation.js';
 const SCHEMA = {
   name: [
     rules.required('Name'),
+    rules.plainText('Name'),
     (value) => (value.trim().length >= 2 ? null : 'Name is too short'),
     rules.maxLength(50, 'Name'),
     (value) => (/[a-z0-9]/i.test(value.normalize('NFKD')) ? null : 'Use at least one letter or digit (A-Z, 0-9)'),
   ],
-  description: [rules.maxLength(255, 'Description')],
+  description: [rules.plainText('Description'), rules.maxLength(255, 'Description')],
 };
 
 // Adds a category, or edits `category` when given. The parent remounts it

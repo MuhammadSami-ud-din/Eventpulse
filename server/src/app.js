@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import { noStore } from './middleware/cacheControl.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { requireJsonBody } from './middleware/requireJsonBody.js';
 import { adminRouter } from './routes/admin.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { categoryRouter } from './routes/category.routes.js';
@@ -55,6 +56,7 @@ export function createApp({ clientDistDir } = {}) {
   app.use(helmet({ contentSecurityPolicy }));
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
+  app.use('/api', requireJsonBody);
   app.use(cookieParser());
   app.use(csrfProtection);
 

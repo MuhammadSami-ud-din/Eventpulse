@@ -13,11 +13,14 @@ import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { errorMessage } from '../../utils/errors.js';
 import { formatEventTime, pluralize } from '../../utils/format.js';
+import { rules } from '../../utils/validation.js';
 
 const REASON_MIN = 5;
 const REASON_MAX = 255;
 
 function reasonError(reason) {
+  const textError = rules.plainText('The reason')(reason);
+  if (textError) return textError;
   const length = reason.trim().length;
   if (length < REASON_MIN) return 'Give the organizer a short reason (at least 5 characters)';
   return length > REASON_MAX ? `Keep it under ${REASON_MAX} characters` : null;

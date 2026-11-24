@@ -1,18 +1,25 @@
 import { z } from 'zod';
-import { isoDateTime, paginationFields } from './common.schemas.js';
+import { id, isoDateTime, paginationFields, text, wholeNumber } from './common.schemas.js';
 
 const EVENT_STATUSES = ['draft', 'pending', 'published', 'rejected', 'closed'];
 
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+// Limits that keep obvious typos (year 2062 instead of 2026, an end date a
+// month late) from becoming real events.
+const MAX_DAYS_AHEAD = 2 * 365;
+const MAX_DURATION_DAYS = 14;
+
 const eventFields = {
-  title: z.string().trim().min(3, 'Title is too short').max(150),
-  description: z.string().trim().min(10, 'Add a longer description').max(5000),
-  venue: z.string().trim().min(2, 'Venue is required').max(150),
-  categoryId: z.coerce.number().int().positive('Choose a category'),
+  title: text({ min: 3, max: 150, tooShort: 'Title is too short' }),
+  description: text({ min: 10, max: 5000, multiline: true, tooShort: 'Add a longer description' }),
+  venue: text({ min: 2, max: 150, tooShort: 'Venue is required' }),
+  categoryId: id,
   startsAt: isoDateTime,
   endsAt: isoDateTime,
   registrationDeadline: isoDateTime,
-  cancellationWindowHours: z.coerce.number().int().min(0).max(720),
-  capacity: z.coerce.number().int().min(1, 'Capacity must be at least 1').max(100000),
+  cancellationWindowHours: wholeNumber({ min: 0, max: 720 }),
+  capacity: wholeNumber({ min: 1, max: 100000 }),
 };
 
 // Shared by create (on the request body) and update (on the merged event),
@@ -21,9 +28,13 @@ export function scheduleIssues({ startsAt, endsAt, registrationDeadline }, now =
   const issues = [];
   if (startsAt.getTime() <= now) {
     issues.push({ field: 'startsAt', message: 'Start time must be in the future' });
+  } else if (startsAt.getTime() > now + MAX_DAYS_AHEAD * DAY_MS) {
+    issues.push({ field: 'startsAt', message: 'Events can be scheduled at most 2 years ahead' });
   }
   if (endsAt <= startsAt) {
     issues.push({ field: 'endsAt', message: 'End time must be after the start time' });
+  } else if (endsAt - startsAt > MAX_DURATION_DAYS * DAY_MS) {
+    issues.push({ field: 'endsAt', message: `An event can last at most ${MAX_DURATION_DAYS} days` });
   }
   if (registrationDeadline > startsAt) {
     issues.push({ field: 'registrationDeadline', message: 'Registration must close before the event starts' });
@@ -66,5 +77,5 @@ export const managedEventsQuerySchema = z.object({
 });
 
 export const rejectEventSchema = z.object({
-  reason: z.string().trim().min(5, 'Give the organizer a short reason').max(255),
+  reason: text({ min: 5, max: 255, multiline: true, tooShort: 'Give the organizer a short reason' }),
 });

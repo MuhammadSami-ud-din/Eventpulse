@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { parseTicketInput } from '../utils/ticketCode.js';
+import { idText } from './common.schemas.js';
 
 export const registrationParamsSchema = z.object({
-  id: z.coerce.number().int().positive(),
-  registrationId: z.coerce.number().int().positive(),
+  id: idText,
+  registrationId: idText,
 });
 
 export const checkInSchema = z.object({

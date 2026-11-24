@@ -13,7 +13,7 @@ import { rules } from '../../utils/validation.js';
 const SCHEMA = {
   fullName: [rules.required('Name'), rules.fullName],
   email: [rules.required('Email'), rules.email],
-  department: [rules.maxLength(100, 'Department')],
+  department: [rules.plainText('Department'), rules.maxLength(100, 'Department')],
   password: [rules.required('Password'), rules.newPassword],
 };
 
@@ -70,13 +70,13 @@ export function AdminNewAccountPage() {
               {formError}
             </p>
           )}
-          <FormField label="Name" hint="A person, or a society such as “Photography Club”." {...form.field('fullName')} />
-          <FormField label="Email" type="email" autoComplete="off" {...form.field('email')} />
+          <FormField label="Name" hint="A person, or a society such as “Photography Club”." maxLength={100} {...form.field('fullName')} />
+          <FormField label="Email" type="email" autoComplete="off" maxLength={255} {...form.field('email')} />
           <FormField label="Role" as="select" {...form.field('role')}>
             <option value="organizer">Organizer: creates and runs their own events</option>
             <option value="admin">Admin: manages every event, user and category</option>
           </FormField>
-          <FormField label="Department (optional)" {...form.field('department')} />
+          <FormField label="Department (optional)" maxLength={100} {...form.field('department')} />
           {/* Shown as plain text: the admin has to copy it and pass it on. */}
           <FormField
             label="Starting password"

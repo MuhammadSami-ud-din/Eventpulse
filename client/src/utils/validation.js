@@ -8,10 +8,23 @@ const BCRYPT_MAX_BYTES = 72;
 
 const byteLength = (text) => new TextEncoder().encode(text).length;
 
+// Mirror the server's text() rules: no hidden control characters (line breaks
+// and tabs are fine; an <input> cannot hold them anyway) and no text-direction
+// overrides, and required text must contain a letter or digit in any script.
+const HIDDEN_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u202A-\u202E\u2066-\u2069]/;
+const LETTER_OR_DIGIT = /[\p{L}\p{N}]/u;
+
 export const rules = {
   required: (label) => (value) => (String(value ?? '').trim() ? null : `${label} is required`),
 
+  plainText: (label) => (value) => {
+    if (HIDDEN_CHARACTERS.test(value)) return `${label} contains hidden control characters`;
+    return value.trim() && !LETTER_OR_DIGIT.test(value) ? `${label} must contain letters or digits` : null;
+  },
+
   fullName: (value) => {
+    const textError = rules.plainText('Name')(value);
+    if (textError) return textError;
     const length = value.trim().length;
     if (length < 2) return 'Name is too short';
     return length > 100 ? 'Name is too long' : null;

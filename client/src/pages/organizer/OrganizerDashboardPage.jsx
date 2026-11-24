@@ -66,6 +66,7 @@ export function OrganizerDashboardPage() {
             type="search"
             className="field__control"
             placeholder="Event title, venue…"
+            maxLength={100}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

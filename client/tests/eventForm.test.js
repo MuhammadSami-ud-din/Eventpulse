@@ -37,6 +37,13 @@ describe('event form', () => {
     assert.deepEqual(Object.keys(errors).sort(), ['endsAt', 'registrationDeadline', 'startsAt']);
   });
 
+  test('limits match the server: at most 2 years ahead, at most 14 days long', () => {
+    let errors = validateForm({ ...valid, startsAt: inDays(800, 10), endsAt: inDays(800, 12), registrationDeadline: inDays(799, 10) }, EVENT_FORM_SCHEMA);
+    assert.match(errors.startsAt, /2 years/);
+    errors = validateForm({ ...valid, endsAt: inDays(30, 10) }, EVENT_FORM_SCHEMA);
+    assert.match(errors.endsAt, /14 days/);
+  });
+
   test('numbers must be whole and in range', () => {
     const errors = validateForm({ ...valid, capacity: '2.5', cancellationWindowHours: '-1' }, EVENT_FORM_SCHEMA);
     assert.deepEqual(Object.keys(errors).sort(), ['cancellationWindowHours', 'capacity']);

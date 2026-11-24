@@ -12,7 +12,7 @@ const SCHEMA = {
   fullName: [rules.required('Full name'), rules.fullName],
   email: [rules.required('Email'), rules.email],
   studentNumber: [rules.required('Student number'), rules.studentNumber],
-  department: [rules.maxLength(100, 'Department')],
+  department: [rules.plainText('Department'), rules.maxLength(100, 'Department')],
   password: [rules.required('Password'), rules.newPassword],
   confirmPassword: [rules.matches('password', 'Passwords do not match')],
 };
@@ -57,10 +57,10 @@ export function RegisterPage() {
             {formError}
           </p>
         )}
-        <FormField label="Full name" autoComplete="name" {...form.field('fullName')} />
-        <FormField label="University email" type="email" autoComplete="email" {...form.field('email')} />
-        <FormField label="Student number" hint="As printed on your student card." {...form.field('studentNumber')} />
-        <FormField label="Department (optional)" {...form.field('department')} />
+        <FormField label="Full name" autoComplete="name" maxLength={100} {...form.field('fullName')} />
+        <FormField label="University email" type="email" autoComplete="email" maxLength={255} {...form.field('email')} />
+        <FormField label="Student number" hint="As printed on your student card." maxLength={20} {...form.field('studentNumber')} />
+        <FormField label="Department (optional)" maxLength={100} {...form.field('department')} />
         <FormField
           label="Password"
           type="password"

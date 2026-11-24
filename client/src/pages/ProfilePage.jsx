@@ -9,7 +9,7 @@ import { rules } from '../utils/validation.js';
 
 const PROFILE_SCHEMA = {
   fullName: [rules.required('Full name'), rules.fullName],
-  department: [rules.maxLength(100, 'Department')],
+  department: [rules.plainText('Department'), rules.maxLength(100, 'Department')],
 };
 
 const PASSWORD_SCHEMA = {
@@ -89,8 +89,8 @@ export function ProfilePage() {
       <section className="card profile-section" aria-labelledby="details-heading">
         <h2 id="details-heading">Your details</h2>
         <form onSubmit={saveProfile} noValidate>
-          <FormField label="Full name" autoComplete="name" {...profile.field('fullName')} />
-          <FormField label="Department" {...profile.field('department')} />
+          <FormField label="Full name" autoComplete="name" maxLength={100} {...profile.field('fullName')} />
+          <FormField label="Department" maxLength={100} {...profile.field('department')} />
           <button type="submit" className="button button--primary" disabled={profile.submitting}>
             {profile.submitting ? 'Saving…' : 'Save changes'}
           </button>
@@ -101,7 +101,7 @@ export function ProfilePage() {
         <h2 id="password-heading">Change password</h2>
         <p className="field__hint">This logs you out on every other device.</p>
         <form onSubmit={savePassword} noValidate>
-          <FormField label="Current password" type="password" autoComplete="current-password" {...password.field('currentPassword')} />
+          <FormField label="Current password" type="password" autoComplete="current-password" maxLength={128} {...password.field('currentPassword')} />
           <FormField
             label="New password"
             type="password"

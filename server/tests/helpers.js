@@ -37,10 +37,22 @@ async function send(baseUrl, method, path, { body, cookie, csrfToken }) {
 
 // Authenticates as a user without a password: a signed access token plus a
 // matching CSRF cookie/header pair, exactly what a logged-in browser sends.
+// `call.raw` sends the body exactly as given (malformed JSON, other content types).
 function apiClient(baseUrl, userId) {
   const csrfToken = randomBytes(32).toString('base64url');
   const cookie = `${ACCESS_COOKIE}=${signAccessToken(userId)}; ${CSRF_COOKIE}=${csrfToken}`;
-  return (method, path, body) => send(baseUrl, method, path, { body, cookie, csrfToken });
+  const call = (method, path, body) => send(baseUrl, method, path, { body, cookie, csrfToken });
+  call.raw = async (method, path, rawBody, contentType = 'application/json') => {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { cookie, [CSRF_HEADER]: csrfToken, 'content-type': contentType },
+      // fetch refuses a body on GET/HEAD, so those are sent without one.
+      body: ['GET', 'HEAD'].includes(method) ? undefined : rawBody,
+    });
+    const isJson = res.headers.get('content-type')?.includes('application/json');
+    return { status: res.status, body: isJson ? await res.json() : await res.text() };
+  };
+  return call;
 }
 
 // Behaves like a browser: keeps the cookies the server sets, sends them back,

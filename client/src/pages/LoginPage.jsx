@@ -48,8 +48,8 @@ export function LoginPage() {
             {formError}
           </p>
         )}
-        <FormField label="Email" type="email" autoComplete="email" {...form.field('email')} />
-        <FormField label="Password" type="password" autoComplete="current-password" {...form.field('password')} />
+        <FormField label="Email" type="email" autoComplete="email" maxLength={255} {...form.field('email')} />
+        <FormField label="Password" type="password" autoComplete="current-password" maxLength={128} {...form.field('password')} />
         <button type="submit" className="button button--primary button--block" disabled={form.submitting}>
           {form.submitting ? 'Logging in…' : 'Log in'}
         </button>
