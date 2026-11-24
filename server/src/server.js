@@ -17,7 +17,7 @@ function clientDistDir() {
 }
 
 const server = createApp({ clientDistDir: clientDistDir() }).listen(env.PORT, () => {
-  console.log(`EventHub listening on port ${env.PORT}${isProduction ? ' (serving the built client)' : ''}`);
+  console.log(`EventPulse listening on port ${env.PORT}${isProduction ? ' (serving the built client)' : ''}`);
 });
 
 function shutdown(signal) {

@@ -11,7 +11,7 @@ export const checkInSchema = z.object({
     .string()
     .max(100)
     .transform(parseTicketInput)
-    .refine((code) => code !== null, 'This is not an EventHub ticket code'),
+    .refine((code) => code !== null, 'This is not an EventPulse ticket code'),
 });
 
 export const markAttendanceSchema = z.object({

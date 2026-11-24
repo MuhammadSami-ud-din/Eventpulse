@@ -29,6 +29,6 @@ export async function getTicketQr(req, res) {
   }
   res
     .type('png')
-    .set('Content-Disposition', `inline; filename="eventhub-ticket-${registration.id}.png"`)
+    .set('Content-Disposition', `inline; filename="eventpulse-ticket-${registration.id}.png"`)
     .send(await renderTicketQr(registration.ticketCode));
 }

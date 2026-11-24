@@ -11,9 +11,12 @@
   },
   "scripts": {
     "dev": "concurrently --kill-others-on-fail -n server,client -c blue,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm start -w server",
     "migrate": "npm run migrate -w server",
     "migrate:fresh": "npm run migrate:fresh -w server",
-    "seed": "npm run seed -w server"
+    "seed": "npm run seed -w server",
+    "test": "npm test --workspaces"
   },
   "devDependencies": {
     "concurrently": "^10.0.7"

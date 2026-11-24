@@ -1,0 +1,595 @@
+/* ---------- Shared: toolbar, tables, tabs, notices ---------- */
+.page-intro {
+  color: var(--color-text-muted);
+}
+
+.toolbar {
+  display: grid;
+  gap: var(--space-3);
+  align-items: end;
+  margin-bottom: var(--space-4);
+}
+
+.toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (min-width: 48rem) {
+  .toolbar {
+    grid-template-columns: minmax(12rem, 22rem) minmax(10rem, 14rem) 1fr;
+  }
+
+  .toolbar__actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Wide tables scroll inside their own box, never the whole page. */
+.table-wrap {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table__number {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table__primary {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+a.table__primary {
+  color: var(--color-primary);
+}
+
+.table__secondary {
+  display: block;
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin: var(--space-4) 0 var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.tabs__link {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 3px solid transparent;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tabs__link.active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-primary);
+}
+
+.notice {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.notice--danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.button--small {
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.85rem;
+}
+
+/* ---------- Manage event ---------- */
+.manage-header__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.manage-header__title h1 {
+  margin: 0;
+}
+
+.manage-header__meta {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.facts--row {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.manage-section {
+  margin-top: var(--space-5);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .stat-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.stat-tile {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.stat-tile__label,
+.stat-tile__detail {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.stat-tile__value {
+  margin: var(--space-1) 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-form {
+  max-width: 48rem;
+}
+
+.event-form__row {
+  display: grid;
+  gap: 0 var(--space-4);
+}
+
+@media (min-width: 40rem) {
+  .event-form__row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+textarea.field__control {
+  resize: vertical;
+}
+
+/* ---------- Charts ---------- */
+.chart-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 56rem) {
+  .chart-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.chart {
+  margin: 0;
+}
+
+.chart__title {
+  margin-bottom: var(--space-3);
+  font-weight: 600;
+}
+
+.chart__empty {
+  color: var(--color-text-muted);
+}
+
+/* Hover tooltips for chart marks. The same numbers are always visible in the
+   legend or the table view, so nothing depends on hovering. */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Stacked bar: the empty track is "not marked"; 2px gaps separate segments. */
+.stacked-bar {
+  display: flex;
+  gap: 2px;
+  height: 1.25rem;
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+}
+
+.stacked-bar__segment:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.stacked-bar__segment:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.stacked-bar__segment:only-child {
+  border-radius: 4px;
+}
+
+.stacked-bar__segment--attended,
+.legend__swatch--attended {
+  background: var(--series-1);
+}
+
+.stacked-bar__segment--no-show,
+.legend__swatch--no-show {
+  background: var(--series-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.legend strong {
+  color: var(--color-text);
+}
+
+.legend__swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: var(--space-1);
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.legend__swatch--track {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* Column chart: one series, bars rounded at the data end (top), 2px apart. */
+.column-chart {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--space-2);
+}
+
+.column-chart__max {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.column-chart__plot,
+.column-chart__axis {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.column-chart__plot {
+  align-items: flex-end;
+  height: 9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Columns share the width but never get wider than 3rem, so a short history
+   shows a few bars instead of one slab. Ticks use the same sizing. */
+.column-chart__column,
+.column-chart__tick {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3rem;
+}
+
+.column-chart__column {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.column-chart__bar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--series-1);
+}
+
+.column-chart__column:hover .column-chart__bar {
+  opacity: 0.8;
+}
+
+.column-chart__axis {
+  grid-column: 2;
+  margin-top: var(--space-1);
+}
+
+/* Flex alignment decides which way a label wider than its column spills:
+   the first label grows rightwards, the last leftwards, a lone one both ways. */
+.column-chart__tick {
+  display: flex;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.column-chart__tick:first-child:not(:only-child) {
+  justify-content: flex-start;
+}
+
+.column-chart__tick:last-child:not(:only-child) {
+  justify-content: flex-end;
+}
+
+.chart__table {
+  margin-top: var(--space-3);
+  font-size: 0.9rem;
+}
+
+.chart__table summary {
+  cursor: pointer;
+  color: var(--color-primary);
+}
+
+.chart__table table {
+  margin-top: var(--space-2);
+  border-collapse: collapse;
+}
+
+.chart__table th,
+.chart__table td {
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ---------- Registrations ---------- */
+.attendance-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.attendance-cell__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* ---------- Check-in ---------- */
+.check-in__grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 56rem) {
+  .check-in__grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.check-in__manual {
+  margin-top: var(--space-5);
+}
+
+.check-in__manual-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.check-in__code-input {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scanner {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.scanner__viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: #000;
+  aspect-ratio: 4 / 3;
+}
+
+.scanner__viewport--hidden {
+  display: none;
+}
+
+.scanner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A square guide so staff know where to hold the ticket. */
+.scanner__frame {
+  position: absolute;
+  inset: 15% 25%;
+  border: 3px solid rgb(255 255 255 / 85%);
+  border-radius: var(--radius-md);
+}
+
+.scanner__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.scan-result {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.scan-result--success {
+  border-color: var(--color-success-text);
+  background: var(--color-success-bg);
+}
+
+.scan-result--warning {
+  border-color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+}
+
+.scan-result--error {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.scan-result__title {
+  margin: 0 0 var(--space-1);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.scan-result__detail {
+  margin: 0;
+}
+
+.check-in__recent-heading {
+  margin-top: var(--space-5);
+  font-size: 1rem;
+}
+
+.recent-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.recent-list__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--color-success-text);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.875rem;
+}
+
+.recent-list__item--warning {
+  border-left-color: var(--color-warning-text);
+}
+
+/* ---------- Admin approvals ---------- */
+.approval-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.approval {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .approval {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.approval__title {
+  font-size: 1.15rem;
+  margin-bottom: var(--space-1);
+}
+
+.approval__meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.approval__description {
+  margin-top: var(--space-3);
+  white-space: pre-line;
+}
+
+.approval__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--space-2);
+}

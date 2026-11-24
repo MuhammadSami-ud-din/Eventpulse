@@ -1,0 +1,328 @@
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  text-decoration: none;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ---------- Home ---------- */
+.hero {
+  margin-bottom: var(--space-5);
+}
+
+.search__input {
+  width: 100%;
+  min-height: 3rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.filters__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.results-count {
+  color: var(--color-text-muted);
+}
+
+.event-grid,
+.registration-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.event-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.event-card:focus-within {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.event-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.event-card__title {
+  margin: var(--space-1) 0;
+  font-size: 1.1rem;
+}
+
+.event-card__link {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+/* Stretches the title link over the whole card so the card is one big target. */
+.event-card__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.event-card__link:focus-visible {
+  outline: none;
+}
+
+.event-card__detail {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.event-card .seat-meter {
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+@media (min-width: 40rem) {
+  .event-grid,
+  .registration-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters__row {
+    grid-template-columns: repeat(3, minmax(0, 12rem)) auto;
+  }
+}
+
+@media (min-width: 64rem) {
+  .event-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---------- Event detail ---------- */
+.event-detail__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.event-detail__organizer {
+  color: var(--color-text-muted);
+}
+
+.event-detail__layout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.event-detail__description {
+  white-space: pre-line;
+}
+
+.event-detail__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-self: start;
+}
+
+@media (min-width: 56rem) {
+  .event-detail__layout {
+    grid-template-columns: 1fr 20rem;
+  }
+
+  .event-detail__aside {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+}
+
+.facts dt {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.rules {
+  padding-left: var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.panel__status {
+  font-weight: 700;
+}
+
+.panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.panel__note {
+  margin-top: var(--space-3);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Auth ---------- */
+.auth {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--space-5);
+}
+
+.auth__switch {
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+/* ---------- Registrations & ticket ---------- */
+.registration-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.registration-card--muted {
+  opacity: 0.75;
+}
+
+.registration-card__badges,
+.registration-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.registration-card__title {
+  margin: var(--space-1) 0 0;
+  font-size: 1.1rem;
+}
+
+.registration-card__detail {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.registration-card__actions {
+  margin-top: var(--space-3);
+}
+
+.ticket {
+  max-width: 26rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ticket .back-link {
+  display: block;
+  text-align: left;
+}
+
+.ticket__qr {
+  display: block;
+  width: min(280px, 100%);
+  aspect-ratio: 1;
+  margin: var(--space-4) auto;
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.ticket__qr--loading {
+  background: var(--color-surface-muted);
+}
+
+.ticket__code {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.ticket__hint,
+.ticket__fallback {
+  color: var(--color-text-muted);
+}
+
+/* ---------- Notifications ---------- */
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.notification {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notification--unread {
+  border-left: 4px solid var(--color-primary);
+}
+
+.notification__title {
+  font-size: 1rem;
+  margin-bottom: var(--space-1);
+}
+
+.notification__time {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.notification__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (min-width: 40rem) {
+  .notification {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+/* ---------- Profile ---------- */
+.profile-section {
+  max-width: 36rem;
+  margin-bottom: var(--space-5);
+}
