@@ -211,6 +211,26 @@ describe('categories', () => {
     assert.equal(res.status, 404);
   });
 
+  test('the admin list shows how many events use each category', async () => {
+    const { body } = await createCategory(`Counted ${ctx.runId}`);
+    await ctx.createEvent({ categoryId: body.category.id });
+    await ctx.createEvent({ categoryId: body.category.id });
+
+    const res = await admin.call('GET', '/admin/categories');
+
+    const row = res.body.data.find((category) => category.id === body.category.id);
+    assert.equal(row.eventCount, 2);
+  });
+
+  test('a rename to a name that is already taken is refused on the name field', async () => {
+    const first = await createCategory(`First ${ctx.runId}`);
+    const second = await createCategory(`Second ${ctx.runId}`);
+    const res = await admin.call('PUT', `/admin/categories/${second.body.category.id}`, { name: first.body.category.name });
+    assert.equal(res.status, 409);
+    assert.equal(res.body.error.details[0].field, 'name');
+    assert.equal((await admin.call('PUT', '/admin/categories/4294967295', { name: `Ghost ${ctx.runId}` })).status, 404);
+  });
+
   test('organizers cannot manage categories', async () => {
     const res = await ctx.organizer.call('POST', '/admin/categories', { name: `Nope ${ctx.runId}` });
     assert.equal(res.status, 403);

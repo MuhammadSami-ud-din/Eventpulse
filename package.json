@@ -16,7 +16,8 @@
     "migrate": "npm run migrate -w server",
     "migrate:fresh": "npm run migrate:fresh -w server",
     "seed": "npm run seed -w server",
-    "test": "npm test --workspaces"
+    "test": "npm test --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces"
   },
   "devDependencies": {
     "concurrently": "^10.0.7"

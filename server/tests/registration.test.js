@@ -208,3 +208,25 @@ describe('data consistency across all events', () => {
     assert.deepEqual(ids, [], `events with duplicate active registrations: ${ids}`);
   });
 });
+
+describe("a student's registration list", () => {
+  test('filters by time (upcoming/past), by event and by status', async () => {
+    const [student] = await ctx.createStudents(1);
+    const upcomingId = await ctx.createEvent();
+    const pastId = await ctx.createEvent();
+    const full = await ctx.createEvent({ capacity: 1 });
+    const [holder] = await ctx.createStudents(1);
+    await holder.call('POST', `/events/${full}/registrations`);
+    for (const eventId of [upcomingId, pastId, full]) await student.call('POST', `/events/${eventId}/registrations`);
+    await ctx.setEventTimes(pastId, { startsAt: fromNow(-days(2)), endsAt: fromNow(-days(2) + hours(2)) });
+
+    const eventIds = async (query) =>
+      (await student.call('GET', `/me/registrations?${query}`)).body.data.map((r) => r.event.id).sort();
+
+    assert.deepEqual(await eventIds('scope=all'), [upcomingId, pastId, full].sort());
+    assert.deepEqual(await eventIds('scope=upcoming'), [upcomingId, full].sort());
+    assert.deepEqual(await eventIds('scope=past'), [pastId]);
+    assert.deepEqual(await eventIds(`eventId=${upcomingId}`), [upcomingId]);
+    assert.deepEqual(await eventIds('status=waitlisted'), [full]);
+  });
+});

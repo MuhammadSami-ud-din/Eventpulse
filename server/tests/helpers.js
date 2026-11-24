@@ -124,9 +124,15 @@ export class TestContext {
     return { id: result.insertId, email, call: apiClient(this.baseUrl, result.insertId) };
   }
 
-  async login(email, password) {
+  // A browser that has opened the site: no login yet, but a CSRF cookie.
+  async newSession() {
     const session = browserSession(this.baseUrl);
     await session.call('GET', '/auth/csrf');
+    return session;
+  }
+
+  async login(email, password) {
+    const session = await this.newSession();
     const res = await session.call('POST', '/auth/login', { email, password });
     return { ...session, loginStatus: res.status };
   }
@@ -135,7 +141,7 @@ export class TestContext {
     return Promise.all(Array.from({ length: count }, () => this.createUser('student')));
   }
 
-  // Inserted directly as published: approval is not what these tests are about.
+  // Inserted directly (published by default): approval is not what most tests are about.
   async createEvent({
     capacity = 10,
     startsAt = fromNow(days(5)),
@@ -143,21 +149,26 @@ export class TestContext {
     cancellationWindowHours = 24,
     categoryId = this.categoryIds[0],
     organizerId = this.organizer.id,
+    status = 'published',
+    title = `Test event ${this.runId}`,
   } = {}) {
     const [result] = await pool.query(
       `INSERT INTO events (
          organizer_id, category_id, title, description, venue, starts_at, ends_at,
-         registration_deadline, cancellation_window_hours, capacity, status
-       ) VALUES (?, ?, ?, 'Created by the automated test suite.', 'Test Lab', ?, ?, ?, ?, ?, 'published')`,
+         registration_deadline, cancellation_window_hours, capacity, status, rejection_reason
+       ) VALUES (?, ?, ?, 'Created by the automated test suite.', 'Test Lab', ?, ?, ?, ?, ?, ?, ?)`,
       [
         organizerId,
         categoryId,
-        `Test event ${this.runId}`,
+        title,
         startsAt,
         new Date(startsAt.getTime() + hours(2)),
         registrationDeadline,
         cancellationWindowHours,
         capacity,
+        status,
+        // The schema requires a reason on every rejected event.
+        status === 'rejected' ? 'Rejected by the test suite.' : null,
       ],
     );
     this.eventIds.push(result.insertId);

@@ -128,3 +128,23 @@ describe('admin users list', () => {
     assert.equal((await ctx.organizer.call('GET', '/admin/users')).status, 403);
   });
 });
+
+describe("an event's registrations table", () => {
+  test('searches by name, email or student number, and filters by status', async () => {
+    const eventId = await ctx.createEvent({ capacity: 1 });
+    const seated = await ctx.createUser('student', { fullName: 'Hira Javed Test' });
+    const waiting = await ctx.createUser('student', { fullName: 'Omar Farooq Test' });
+    await seated.call('POST', `/events/${eventId}/registrations`);
+    await waiting.call('POST', `/events/${eventId}/registrations`);
+
+    const names = async (query) =>
+      (await ctx.organizer.call('GET', `/organizer/events/${eventId}/registrations?${query}`)).body.data.map(
+        (row) => row.student.fullName,
+      );
+
+    assert.deepEqual(await names('q=hira'), ['Hira Javed Test']);
+    assert.deepEqual(await names(`q=${encodeURIComponent(waiting.email)}`), ['Omar Farooq Test']);
+    assert.deepEqual(await names('status=waitlisted'), ['Omar Farooq Test']);
+    assert.deepEqual(await names('q=100%25'), [], 'a "%" is matched literally, not as a wildcard');
+  });
+});
