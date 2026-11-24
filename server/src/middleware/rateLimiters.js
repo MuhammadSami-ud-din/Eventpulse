@@ -24,3 +24,13 @@ export const loginLimiter = rateLimit({
 });
 
 export const registerLimiter = rateLimit({ ...sharedOptions, windowMs: ONE_HOUR, limit: 20 });
+
+// Guesses at the current password are limited per account, not per IP.
+// Runs after authenticate, so req.user is known.
+export const passwordChangeLimiter = rateLimit({
+  ...sharedOptions,
+  windowMs: FIFTEEN_MINUTES,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `user:${req.user.id}`,
+});

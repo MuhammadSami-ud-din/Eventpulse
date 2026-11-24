@@ -1,4 +1,5 @@
 import * as authService from '../services/auth.service.js';
+import { updateProfile as saveProfile } from '../services/user.service.js';
 import { clearAuthCookies, CSRF_COOKIE, REFRESH_COOKIE, setAuthCookies, setCsrfCookie } from '../utils/authCookies.js';
 import { generateCsrfToken, isWellFormedCsrfToken } from '../middleware/csrf.js';
 import { HttpError } from '../utils/HttpError.js';
@@ -52,4 +53,14 @@ export async function logout(req, res) {
 
 export function me(req, res) {
   res.json({ user: req.user });
+}
+
+export async function updateProfile(req, res) {
+  res.json({ user: await saveProfile(req.user.id, req.validated.body) });
+}
+
+export async function changePassword(req, res) {
+  const { user, tokens } = await authService.changePassword(req.user.id, req.validated.body);
+  setAuthCookies(res, tokens);
+  res.json({ user });
 }

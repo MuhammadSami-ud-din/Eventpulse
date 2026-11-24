@@ -12,6 +12,7 @@ import { categoryRouter } from './routes/category.routes.js';
 import { eventRouter } from './routes/event.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 import { meRouter } from './routes/me.routes.js';
+import { notificationRouter } from './routes/notification.routes.js';
 import { organizerRouter } from './routes/organizer.routes.js';
 
 // Built by a factory (not at import time) so tests can create a fresh app with supertest.
@@ -31,6 +32,7 @@ export function createApp() {
   app.use('/api/categories', categoryRouter);
   app.use('/api/events', eventRouter);
   app.use('/api/me', meRouter);
+  app.use('/api/notifications', notificationRouter);
   app.use('/api/organizer', organizerRouter);
   app.use('/api/admin', adminRouter);
 

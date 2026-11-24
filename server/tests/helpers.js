@@ -17,29 +17,51 @@ export const fromNow = (ms) => new Date(Date.now() + ms);
 export const hours = (n) => n * HOUR_MS;
 export const days = (n) => n * DAY_MS;
 
+async function send(baseUrl, method, path, { body, cookie, csrfToken }) {
+  const res = await fetch(`${baseUrl}${path}`, {
+    method,
+    headers: {
+      ...(cookie && { cookie }),
+      ...(csrfToken && { [CSRF_HEADER]: csrfToken }),
+      ...(body && { 'content-type': 'application/json' }),
+    },
+    body: body && JSON.stringify(body),
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  return {
+    status: res.status,
+    headers: res.headers,
+    body: isJson ? await res.json() : Buffer.from(await res.arrayBuffer()),
+  };
+}
+
 // Authenticates as a user without a password: a signed access token plus a
 // matching CSRF cookie/header pair, exactly what a logged-in browser sends.
 function apiClient(baseUrl, userId) {
   const csrfToken = randomBytes(32).toString('base64url');
   const cookie = `${ACCESS_COOKIE}=${signAccessToken(userId)}; ${CSRF_COOKIE}=${csrfToken}`;
+  return (method, path, body) => send(baseUrl, method, path, { body, cookie, csrfToken });
+}
 
-  return async function call(method, path, body) {
-    const res = await fetch(`${baseUrl}${path}`, {
-      method,
-      headers: {
-        cookie,
-        [CSRF_HEADER]: csrfToken,
-        ...(body && { 'content-type': 'application/json' }),
-      },
-      body: body && JSON.stringify(body),
-    });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    return {
-      status: res.status,
-      headers: res.headers,
-      body: isJson ? await res.json() : Buffer.from(await res.arrayBuffer()),
-    };
-  };
+// Behaves like a browser: keeps the cookies the server sets, sends them back,
+// and echoes the CSRF cookie in the header. Used to test real login flows.
+// (Cookie paths are ignored, so every cookie goes with every request.)
+function browserSession(baseUrl) {
+  const cookies = new Map();
+
+  async function call(method, path, body) {
+    const cookie = [...cookies].map(([name, value]) => `${name}=${value}`).join('; ');
+    const res = await send(baseUrl, method, path, { body, cookie, csrfToken: cookies.get(CSRF_COOKIE) });
+    for (const setCookie of res.headers.getSetCookie()) {
+      const [pair] = setCookie.split(';');
+      const name = pair.slice(0, pair.indexOf('='));
+      const value = pair.slice(pair.indexOf('=') + 1);
+      if (value) cookies.set(name, value);
+      else cookies.delete(name);
+    }
+    return res;
+  }
+  return { call, cookies };
 }
 
 // Owns everything one test file creates, and deletes all of it in cleanup().
@@ -69,22 +91,31 @@ export class TestContext {
     this.organizer = await this.createUser('organizer');
   }
 
-  async createUser(role) {
+  // Pass a password to be able to log in as this user through the real API.
+  async createUser(role, { password } = {}) {
     this.#userCount += 1;
     const n = this.#userCount;
+    const email = `test-${this.runId}-${n}@eventhub.test`;
     const [result] = await pool.query(
       `INSERT INTO users (full_name, email, password_hash, role, student_number)
        VALUES (?, ?, ?, ?, ?)`,
       [
         `Test ${role} ${n}`,
-        `test-${this.runId}-${n}@eventhub.test`,
-        this.passwordHash,
+        email,
+        password ? await bcrypt.hash(password, 4) : this.passwordHash,
         role,
         role === 'student' ? `T${this.runId}${n}`.slice(0, 20) : null,
       ],
     );
     this.userIds.push(result.insertId);
-    return { id: result.insertId, call: apiClient(this.baseUrl, result.insertId) };
+    return { id: result.insertId, email, call: apiClient(this.baseUrl, result.insertId) };
+  }
+
+  async login(email, password) {
+    const session = browserSession(this.baseUrl);
+    await session.call('GET', '/auth/csrf');
+    const res = await session.call('POST', '/auth/login', { email, password });
+    return { ...session, loginStatus: res.status };
   }
 
   createStudents(count) {

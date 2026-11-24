@@ -124,3 +124,22 @@ async function revokeAllSessions(db, userId) {
     [userId],
   );
 }
+
+// Changing the password logs out every other device (a stolen session should
+// not survive it) and hands this device a fresh session in the same transaction.
+export async function changePassword(userId, { currentPassword, newPassword }) {
+  const [[row]] = await pool.execute('SELECT password_hash FROM users WHERE id = ?', [userId]);
+  if (!(await bcrypt.compare(currentPassword, row.password_hash))) {
+    // 400, not 401: a 401 would make the client think the session expired.
+    throw new HttpError(400, 'VALIDATION_ERROR', 'Some fields are invalid', [
+      { field: 'currentPassword', message: 'Current password is incorrect' },
+    ]);
+  }
+  const passwordHash = await bcrypt.hash(newPassword, env.BCRYPT_ROUNDS);
+
+  return withTransaction(async (conn) => {
+    await conn.execute('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, userId]);
+    await revokeAllSessions(conn, userId);
+    return { user: await findActiveUserById(conn, userId), tokens: await issueTokens(conn, userId) };
+  });
+}

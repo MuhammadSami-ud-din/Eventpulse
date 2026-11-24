@@ -6,7 +6,7 @@ const BCRYPT_MAX_BYTES = 72;
 
 const email = z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address').max(255));
 
-const newPassword = z
+export const newPassword = z
   .string()
   .min(8, 'Password must be at least 8 characters')
   .refine((value) => Buffer.byteLength(value, 'utf8') <= BCRYPT_MAX_BYTES, 'Password is too long')
@@ -14,8 +14,10 @@ const newPassword = z
   .refine((value) => /\d/.test(value), 'Include at least one number');
 
 // Unknown keys (e.g. a sneaky "role": "admin") are stripped by zod objects.
+const fullName = z.string().trim().min(2, 'Name is too short').max(100);
+
 export const registerSchema = z.object({
-  fullName: z.string().trim().min(2, 'Name is too short').max(100),
+  fullName,
   email,
   password: newPassword,
   department: z.string().trim().max(100).optional(),
@@ -30,3 +32,23 @@ export const loginSchema = z.object({
   email,
   password: z.string().min(1, 'Password is required').max(128),
 });
+
+// An empty department means "clear it".
+export const updateProfileSchema = z.object({
+  fullName,
+  department: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((value) => value || null),
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password').max(128),
+    newPassword,
+  })
+  .refine((body) => body.currentPassword !== body.newPassword, {
+    message: 'Choose a password different from the current one',
+    path: ['newPassword'],
+  });

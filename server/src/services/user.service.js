@@ -1,3 +1,5 @@
+import { pool } from '../db/pool.js';
+
 // Every query that returns a user to the client selects these columns only,
 // so password_hash can never leak by accident.
 export const PUBLIC_USER_COLUMNS = `
@@ -23,4 +25,9 @@ export async function findActiveUserById(db, userId) {
     [userId],
   );
   return rows[0] ? toPublicUser(rows[0]) : null;
+}
+
+export async function updateProfile(userId, { fullName, department }) {
+  await pool.execute('UPDATE users SET full_name = ?, department = ? WHERE id = ?', [fullName, department, userId]);
+  return findActiveUserById(pool, userId);
 }
