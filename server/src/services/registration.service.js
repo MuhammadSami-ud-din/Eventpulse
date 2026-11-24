@@ -180,6 +180,16 @@ function assertCanCancel(registration, event) {
   }
 }
 
+// Possible when an event's cancellation window is 0 hours: check-in opens
+// before the start, while cancelling is still allowed until the start.
+async function isCheckedIn(conn, registrationId) {
+  const [rows] = await conn.query(
+    "SELECT 1 FROM event_attendance WHERE registration_id = ? AND status = 'attended'",
+    [registrationId],
+  );
+  return rows.length > 0;
+}
+
 export async function cancel(user, registrationId) {
   // Ownership is part of the WHERE clause, so another student's registration
   // is indistinguishable from one that does not exist.
@@ -198,6 +208,9 @@ export async function cancel(user, registrationId) {
       [registrationId],
     );
     assertCanCancel(registration, event);
+    if (await isCheckedIn(conn, registrationId)) {
+      throw new HttpError(409, 'ALREADY_CHECKED_IN', 'You have already been checked in to this event');
+    }
 
     await conn.query(
       `UPDATE event_registrations

@@ -34,3 +34,7 @@ export const passwordChangeLimiter = rateLimit({
   skipSuccessfulRequests: true,
   keyGenerator: (req) => `user:${req.user.id}`,
 });
+
+// Public ticket lookups. Guessing a code is hopeless (32^10), but there is no
+// reason to let one client hammer the endpoint either.
+export const ticketLookupLimiter = rateLimit({ ...sharedOptions, windowMs: 60 * 1000, limit: 60 });

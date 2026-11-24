@@ -4,12 +4,8 @@ import { randomInt } from 'node:crypto';
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const TICKET_CODE_LENGTH = 10;
 const TICKET_CODE_PATTERN = new RegExp(`^[${ALPHABET}]{${TICKET_CODE_LENGTH}}$`);
-
-// The QR holds this prefix plus the code, so the scanner can tell an EventHub
-// ticket apart from any other QR code (a URL, a Wi-Fi poster) and say so.
-// No signature is needed: codes are random (32^10 possibilities), so a valid
-// one cannot be guessed, and check-in is only open to the event's organizer.
-const QR_PREFIX = 'EVENTHUB-TICKET:';
+// The last path segment after "/t/" in a ticket link, ignoring ?query and #hash.
+const TICKET_LINK_PATTERN = /\/t\/([^/?#]+)\/?(?:[?#].*)?$/;
 
 export function generateTicketCode() {
   let code = '';
@@ -19,14 +15,20 @@ export function generateTicketCode() {
   return code;
 }
 
-export function toQrPayload(code) {
-  return `${QR_PREFIX}${code}`;
+// What the QR code contains. With a base URL it is a link, so a student who
+// scans their own ticket with a phone camera lands on its status page; without
+// one it is just the code. Either way it carries no signature: codes are random
+// (32^10 possibilities) and only the event's organizer can check people in.
+export function toQrPayload(code, baseUrl = '') {
+  return baseUrl ? `${baseUrl}/t/${code}` : code;
 }
 
-// Accepts a scanned QR payload or a hand-typed code ("abcd-efgh 23" works).
-// Returns the normalised code, or null if it cannot be a ticket code.
+// Accepts a scanned link (any host: the code is what gets looked up), a
+// scanned bare code, or a hand-typed code such as "abcd-efgh 23".
+// Returns the normalised code, or null if the input cannot be a ticket.
 export function parseTicketInput(input) {
-  const withoutPrefix = input.trim().toUpperCase().replace(QR_PREFIX, '');
-  const code = withoutPrefix.replace(/[\s-]/g, '');
+  const trimmed = input.trim();
+  const raw = trimmed.match(TICKET_LINK_PATTERN)?.[1] ?? trimmed;
+  const code = raw.toUpperCase().replace(/[\s-]/g, '');
   return TICKET_CODE_PATTERN.test(code) ? code : null;
 }

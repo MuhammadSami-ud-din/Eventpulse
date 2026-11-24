@@ -41,9 +41,15 @@ async function prepareDatabase(connection, { fresh }) {
     await connection.query(`DROP DATABASE IF EXISTS ${databaseId}`);
     console.log(`Dropped database ${env.DB_NAME}`);
   }
-  await connection.query(
-    `CREATE DATABASE IF NOT EXISTS ${databaseId} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`,
-  );
+  try {
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS ${databaseId} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`,
+    );
+  } catch (err) {
+    // Managed hosts often create the database for you and do not let the app
+    // user create databases. If it already exists, USE below still works.
+    if (err.code !== 'ER_DBACCESS_DENIED_ERROR') throw err;
+  }
   await connection.query(`USE ${databaseId}`);
   await connection.query(UTC_SESSION_SQL);
 }

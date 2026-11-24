@@ -5,7 +5,12 @@ import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { checkInSchema, markAttendanceSchema, registrationParamsSchema } from '../schemas/attendance.schemas.js';
 import { idParamSchema } from '../schemas/common.schemas.js';
-import { createEventSchema, managedEventsQuerySchema, updateEventSchema } from '../schemas/event.schemas.js';
+import {
+  createEventSchema,
+  eventStatsQuerySchema,
+  managedEventsQuerySchema,
+  updateEventSchema,
+} from '../schemas/event.schemas.js';
 import { eventRegistrationsQuerySchema } from '../schemas/registration.schemas.js';
 
 export const organizerRouter = Router();
@@ -26,6 +31,12 @@ organizerRouter.patch(
 organizerRouter.delete('/events/:id', byId, organizerEvents.deleteEvent);
 organizerRouter.post('/events/:id/publish', byId, organizerEvents.publishEvent);
 organizerRouter.post('/events/:id/close', byId, organizerEvents.closeEvent);
+organizerRouter.get(
+  '/events/:id/stats',
+  validate({ params: idParamSchema, query: eventStatsQuerySchema }),
+  organizerEvents.getStats,
+);
+organizerRouter.get('/events/:id/registrations/export', byId, organizerEvents.exportRegistrations);
 organizerRouter.get(
   '/events/:id/registrations',
   validate({ params: idParamSchema, query: eventRegistrationsQuerySchema }),

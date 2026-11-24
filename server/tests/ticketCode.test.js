@@ -9,9 +9,26 @@ describe('ticket codes', () => {
     }
   });
 
-  test('a QR payload parses back to the same code', () => {
+  test('QR payload: a link when a base URL is configured, otherwise the bare code', () => {
+    const code = generateTicketCode();
+    assert.equal(toQrPayload(code), code);
+    assert.equal(toQrPayload(code, 'https://eventhub.example.com'), `https://eventhub.example.com/t/${code}`);
+  });
+
+  test('both payload formats parse back to the same code', () => {
     const code = generateTicketCode();
     assert.equal(parseTicketInput(toQrPayload(code)), code);
+    assert.equal(parseTicketInput(toQrPayload(code, 'https://eventhub.example.com')), code);
+  });
+
+  test('ticket links are accepted with any host, trailing slash, query or hash', () => {
+    for (const input of [
+      'https://eventhub.example.com/t/ABCDEFGH23',
+      'http://localhost:5173/t/abcdefgh23/',
+      'https://eventhub.example.com/t/ABCDEFGH23?utm=poster#top',
+    ]) {
+      assert.equal(parseTicketInput(input), 'ABCDEFGH23', input);
+    }
   });
 
   test('hand-typed codes are normalised (case, spaces, dashes)', () => {
@@ -19,7 +36,16 @@ describe('ticket codes', () => {
   });
 
   test('anything that cannot be a ticket is rejected', () => {
-    for (const input of ['', 'ABC', 'ABCDEFGH231', 'ABCDEFGH20', 'https://example.com', 'EVENTHUB-TICKET:']) {
+    for (const input of [
+      '',
+      'ABC',
+      'ABCDEFGH231',
+      'ABCDEFGH20',
+      'https://example.com',
+      'https://example.com/t/',
+      'https://example.com/t/NOT-A-TICKET-AT-ALL',
+      'WIFI:S:CampusNet;T:WPA;P:secret;;',
+    ]) {
       assert.equal(parseTicketInput(input), null, JSON.stringify(input));
     }
   });

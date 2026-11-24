@@ -68,3 +68,8 @@ export const managedEventsQuerySchema = z.object({
 export const rejectEventSchema = z.object({
   reason: z.string().trim().min(5, 'Give the organizer a short reason').max(255),
 });
+
+export const eventStatsQuerySchema = z.object({
+  // The browser's offset from UTC in minutes (east positive), from -12h to +14h.
+  utcOffsetMinutes: z.coerce.number().int().min(-720).max(840).default(0),
+});

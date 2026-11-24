@@ -1,4 +1,5 @@
 import * as eventManagement from '../services/eventManagement.service.js';
+import { csvFileName, exportRegistrationsCsv, getEventStats } from '../services/eventStats.service.js';
 import { listEventRegistrations as queryEventRegistrations } from '../services/registrationQueries.service.js';
 import { withTimeFlags } from '../utils/eventTiming.js';
 
@@ -39,4 +40,17 @@ export async function closeEvent(req, res) {
 export async function listEventRegistrations(req, res) {
   const event = await eventManagement.getManagedEvent(req.user, eventId(req));
   res.json(await queryEventRegistrations(event.id, req.validated.query));
+}
+
+export async function getStats(req, res) {
+  const event = await eventManagement.getManagedEvent(req.user, eventId(req));
+  res.json({ stats: await getEventStats(event, req.validated.query) });
+}
+
+export async function exportRegistrations(req, res) {
+  const event = await eventManagement.getManagedEvent(req.user, eventId(req));
+  res
+    .type('text/csv; charset=utf-8')
+    .attachment(csvFileName(event))
+    .send(await exportRegistrationsCsv(event));
 }

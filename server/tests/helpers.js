@@ -92,7 +92,7 @@ export class TestContext {
   }
 
   // Pass a password to be able to log in as this user through the real API.
-  async createUser(role, { password } = {}) {
+  async createUser(role, { password, fullName } = {}) {
     this.#userCount += 1;
     const n = this.#userCount;
     const email = `test-${this.runId}-${n}@eventhub.test`;
@@ -100,7 +100,7 @@ export class TestContext {
       `INSERT INTO users (full_name, email, password_hash, role, student_number)
        VALUES (?, ?, ?, ?, ?)`,
       [
-        `Test ${role} ${n}`,
+        fullName ?? `Test ${role} ${n}`,
         email,
         password ? await bcrypt.hash(password, 4) : this.passwordHash,
         role,

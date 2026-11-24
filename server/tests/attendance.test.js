@@ -3,6 +3,7 @@ import { after, before, describe, test } from 'node:test';
 import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
 import { pool } from '../src/db/pool.js';
+import { ticketQrPayload } from '../src/services/ticket.service.js';
 import { days, fromNow, hours, TestContext } from './helpers.js';
 
 const ctx = new TestContext();
@@ -37,7 +38,7 @@ function decodeQr(pngBuffer) {
 const checkIn = (organizer, eventId, code) => organizer.call('POST', `/organizer/events/${eventId}/check-in`, { code });
 
 describe('ticket QR code', () => {
-  test('the owner gets a PNG that decodes to their ticket code', async () => {
+  test('the owner gets a PNG that decodes to the configured ticket payload', async () => {
     const eventId = await ctx.createEvent({ capacity: 5 });
     const [student] = await ctx.createStudents(1);
     const registration = await register(student, eventId);
@@ -46,7 +47,7 @@ describe('ticket QR code', () => {
 
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('content-type'), 'image/png');
-    assert.equal(decodeQr(res.body), `EVENTHUB-TICKET:${registration.ticketCode}`);
+    assert.equal(decodeQr(res.body), ticketQrPayload(registration.ticketCode));
   });
 
   test("another student cannot fetch someone else's QR (404)", async () => {
@@ -83,7 +84,8 @@ describe('check-in', () => {
     assert.equal(first.body.attendance.status, 'attended');
     assert.equal(first.body.registration.student.studentNumber.length > 0, true);
 
-    const again = await checkIn(ctx.organizer, eventId, `EVENTHUB-TICKET:${registration.ticketCode}`);
+    // Scanned as a ticket link this time.
+    const again = await checkIn(ctx.organizer, eventId, `https://eventhub.example.com/t/${registration.ticketCode}`);
     assert.equal(again.status, 200);
     assert.equal(again.body.result, 'already_checked_in');
     assert.equal(again.body.attendance.checkedInAt, first.body.attendance.checkedInAt);
@@ -167,6 +169,22 @@ describe('check-in', () => {
     assert.equal((await checkIn(otherOrganizer, eventId, registration.ticketCode)).status, 403);
     const admin = await ctx.createUser('admin');
     assert.equal((await checkIn(admin, eventId, registration.ticketCode)).body.result, 'checked_in');
+  });
+});
+
+describe('cancelling after check-in', () => {
+  test('a checked-in student can no longer cancel, even with a 0-hour cancellation window', async () => {
+    const eventId = await createEventStartingSoon({ cancellationWindowHours: 0 });
+    const [student] = await ctx.createStudents(1);
+    const registration = await register(student, eventId);
+    await checkIn(ctx.organizer, eventId, registration.ticketCode);
+
+    const res = await student.call('POST', `/me/registrations/${registration.id}/cancel`);
+
+    assert.equal(res.status, 409);
+    assert.equal(res.body.error.code, 'ALREADY_CHECKED_IN');
+    const [[row]] = await pool.query('SELECT status FROM event_registrations WHERE id = ?', [registration.id]);
+    assert.equal(row.status, 'confirmed');
   });
 });
 

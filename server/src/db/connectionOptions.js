@@ -10,6 +10,7 @@ export const connectionOptions = {
   charset: 'utf8mb4',
   // All DATETIME columns hold UTC; this makes mysql2 convert JS Dates as UTC.
   timezone: 'Z',
+  ssl: env.DB_SSL ? { rejectUnauthorized: true, ...(env.DB_SSL_CA && { ca: env.DB_SSL_CA }) } : undefined,
 };
 
 export const UTC_SESSION_SQL = "SET time_zone = '+00:00'";
