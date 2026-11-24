@@ -8,6 +8,7 @@ A campus event registration platform. Students find events and register for a se
 - [Tech stack](#tech-stack)
 - [How concurrency is handled](#how-concurrency-is-handled)
 - [Business rules](#business-rules)
+- [Database schema](#database-schema)
 - [Setup](#setup)
 - [Test accounts](#test-accounts)
 - [Running the tests](#running-the-tests)
@@ -73,6 +74,50 @@ Seats are a shared resource: when one seat is left and many students click at th
 - **Editing:** an event cannot be edited after it starts, and its capacity cannot drop below the number of confirmed seats.
 - **Deleting:** only draft, pending or rejected events can be deleted. A published event has to be closed instead.
 - **Scheduling limits:** an event starts in the future, at most 2 years ahead, and lasts at most 14 days.
+
+## Database schema
+
+MySQL 8, InnoDB, plain SQL. The schema is built by numbered files in [`server/src/db/migrations/`](server/src/db/migrations). `npm run migrate` applies the ones not yet recorded in the `schema_migrations` table, each once, in order.
+
+| Migration | What it does |
+|---|---|
+| `001_create_users.sql` | `users` |
+| `002_create_event_categories.sql` | `event_categories` |
+| `003_create_events.sql` | `events` |
+| `004_create_event_registrations.sql` | `event_registrations` (seats, waitlist and tickets) |
+| `005_create_event_attendance.sql` | `event_attendance` |
+| `006_create_notifications.sql` | `notifications` |
+| `007_create_refresh_tokens.sql` | `refresh_tokens` (one row per login session) |
+| `008_drop_users_token_version.sql` | Removes `users.token_version`, replaced by per-token revocation in `refresh_tokens` |
+| `009_create_user_avatars.sql` | `user_avatars` (profile photos) |
+| `010_create_event_covers.sql` | `event_covers` (event cover images) |
+| `011_add_event_details.sql` | Adds the optional event-page details to `events` |
+
+```mermaid
+erDiagram
+    users ||--o{ events : organizes
+    event_categories ||--o{ events : groups
+    users ||--o{ event_registrations : makes
+    events ||--o{ event_registrations : has
+    event_registrations ||--o| event_attendance : "checked in as"
+    users ||--o{ notifications : receives
+    users ||--o{ refresh_tokens : "logged in with"
+    users ||--o| user_avatars : has
+    events ||--o| event_covers : has
+```
+
+| Table | Main columns | Rules enforced by the database |
+|---|---|---|
+| `users` | `full_name`, `email`, `password_hash` (bcrypt), `role` (student / organizer / admin), `department`, `student_number`, `is_active` | Email unique (case-insensitive); student number unique |
+| `event_categories` | `name`, `slug`, `description` | Name and slug unique |
+| `events` | `organizer_id`, `category_id`, `title`, `tagline`, `description`, `venue`, `starts_at`, `ends_at`, `registration_deadline`, `cancellation_window_hours`, `capacity`, `confirmed_count`, `status` (draft / pending / published / rejected / closed), `rejection_reason`, `reviewed_by`; `agenda`, `speakers`, `tags` (JSON lists); `what_to_bring`, `entry_notes`, `contact` | `CHECK (confirmed_count <= capacity)`, so the database itself refuses an overbooking; capacity 1–100,000; ends after it starts; registration closes at or before the start; a rejected event must have a reason. Full-text index on title, description and venue for search |
+| `event_registrations` | `event_id`, `user_id`, `status` (confirmed / waitlisted / cancelled), `waitlist_position`, `ticket_code`, `registered_at`, `promoted_at`, `cancelled_at` | **One active registration per student per event**: a unique key on (event, student, `active_marker`), where `active_marker` is a generated column that is NULL for cancelled rows. Cancelled history is kept, and a student can register again after cancelling. Waitlist positions unique per event; ticket codes unique; only waitlisted rows have a position; only cancelled rows have `cancelled_at` |
+| `event_attendance` | `registration_id`, `status` (attended / no_show), `checked_in_at`, `marked_by` | One record per registration; "attended" always has a check-in time |
+| `notifications` | `user_id`, `event_id`, `type`, `title`, `message`, `read_at` | Deleted with their user; kept (without the link) if the event is deleted |
+| `refresh_tokens` | `user_id`, `jti`, `expires_at`, `revoked_at` | `jti` unique; deleted with their user |
+| `user_avatars`, `event_covers` | `data` (the image, up to 1 MB), `mime_type` (JPEG / PNG / WebP), `byte_size`, `updated_at` | One per user or event, deleted with it; size limited to 1 MB by a CHECK |
+
+`confirmed_count` is a stored copy of the number of confirmed seats. It changes only inside a registration transaction while the event row is locked (see [How concurrency is handled](#how-concurrency-is-handled)), so lists can show seats left without counting rows every time. Images are kept in their own tables so ordinary user and event queries never load them.
 
 ## Setup
 
@@ -208,6 +253,19 @@ The server tests start the app on a random port and run against the database in 
 | `production.test.js`, `databaseUrl.test.js`, `errorHandler.test.js` | Serving the built client (fallback, cache headers, CSP); `DATABASE_URL` parsing; no internal details in 500 errors. |
 
 Client tests (`client/tests/`) cover the form validation rules, the event form (schedule and detail rules), the safe formatting renderer (script and `javascript:` link injection), image resizing maths, `.ics` generation, formatting, error helpers, navigation per role, command search, keyboard shortcuts, placeholder colours and password suggestions.
+
+### Where capacity, duplicate registration and authorization are proven
+
+| Rule | Test (`server/tests/`) |
+|---|---|
+| **Capacity is never exceeded** | `registration.test.js`: "25 students racing for 1 seat: exactly 1 confirmed, 24 waitlisted at positions 1-24"; "no upcoming event has a free seat while someone is waitlisted". `eventLifecycle.test.js`: "capacity cannot drop below the confirmed seats; raising it moves the waitlist up" |
+| **No duplicate registration** | `registration.test.js`: "one student sending 10 parallel requests: 1 created, 9 ALREADY_REGISTERED"; "no student has two active registrations for the same event" (checked across the whole database) |
+| **Students can't use organizer or admin features** | `registration.test.js`: "a student cannot call organizer or admin endpoints (403)": listing, viewing, editing and closing events, the registrations table, approving. It also checks that nothing changed |
+| **Students only see their own data** | `registration.test.js`: "a student cannot view or cancel another student's registration (404)". `attendance.test.js`: "another student cannot fetch someone else's QR (404)". `notifications.test.js`: "a user cannot see or mark someone else's notifications". These answer 404, not 403, so they don't even reveal that the item exists |
+| **Organizers only manage their own events** | `eventLifecycle.test.js`: "another organizer can neither see nor change someone else's event" (view, edit, delete and submit all 403; the event is unchanged). `organizer.test.js`: stats and CSV export only for the event's owner or an admin. `attendance.test.js`: "only the event organizer (or an admin) can check people in". `images.test.js`: "only the event organizer or an admin can change a cover" |
+| **Only admins run the platform** | `admin.test.js`: "only admins can manage users"; "organizers cannot manage categories". `organizer.test.js`: "students and organizers cannot list users". `auth.test.js`: "anyone signing up is a student, whatever role they ask for" |
+| **Logged-out users are refused** | `auth.test.js`: "/auth/me needs a valid, unexpired access token" (missing, forged, expired and unsigned tokens). `notifications.test.js`: anonymous users get 401. `auth.test.js`: changes need a matching CSRF token |
+| **Private images stay private** | `images.test.js`: "a student's avatar is visible only to them, admins, and organizers of their events"; "a draft's cover is private to its managers; once published it is public" |
 
 ## API reference
 
