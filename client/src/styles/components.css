@@ -14,10 +14,16 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .button:hover {
   background: var(--color-surface-muted);
+}
+
+/* A small press: the button sinks a pixel while held. */
+.button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
 }
 
 .button:disabled {
@@ -29,6 +35,7 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-on-primary);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%), 0 4px 14px rgb(50 69 198 / 25%);
 }
 
 .button--primary:hover {
@@ -74,12 +81,77 @@
 }
 
 /* ---------- Cards, badges, chips ---------- */
-.card {
+/* Frosted glass panels: translucent surface, blur and saturation of what is
+   behind, a 1px light border and a bright top edge. With reduced
+   transparency the tokens make them solid; without blur support, see below. */
+.card,
+.stat-tile,
+.table-wrap {
   background: var(--color-glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), inset 0 1px 0 var(--glass-highlight);
+}
+
+.card {
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .card,
+  .stat-tile,
+  .table-wrap {
+    background: var(--color-surface);
+  }
+}
+
+/* ---------- Avatars and illustrations ---------- */
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 20%);
+  user-select: none;
+}
+
+.illustration {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 7.5rem;
+  height: 7.5rem;
+  color: var(--color-primary);
+}
+
+.illustration--danger {
+  color: var(--color-danger-text);
+}
+
+.illustration__rings {
+  position: absolute;
+  inset: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-opacity: 0.18;
+  stroke-width: 1.5;
+}
+
+.illustration__icon {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--color-glass-strong);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-card), inset 0 1px 0 var(--glass-highlight), 0 0 0 10px var(--color-active);
 }
 
 .badge {
@@ -218,7 +290,8 @@
 
 .seat-meter__fill {
   height: 100%;
-  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-primary), #8b5cf6);
 }
 
 .seat-meter__text {
@@ -366,7 +439,7 @@
   width: min(28rem, calc(100% - 2rem));
   padding: var(--space-5);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--color-glass-strong);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -450,6 +523,24 @@
   display: flex;
   flex-direction: column;
   min-height: 11rem;
+}
+
+.skeleton--cover {
+  height: 8.5rem;
+  border-radius: 0;
+}
+
+/* Cards with a cover have no padding; the text part is padded instead. */
+.skeleton-card--cover {
+  padding: 0;
+  overflow: hidden;
+}
+
+.skeleton-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: var(--space-4);
 }
 
 .skeleton-card .skeleton--bar {

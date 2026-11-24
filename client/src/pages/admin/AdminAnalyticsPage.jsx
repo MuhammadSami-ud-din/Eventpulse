@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
 import { fetchAnalytics } from '../../api/admin.js';
-import { AdminNav } from '../../components/AdminNav.jsx';
 import { AttendanceBar } from '../../components/AttendanceBar.jsx';
 import { CategoryDemand } from '../../components/CategoryDemand.jsx';
 import { ColumnChart } from '../../components/ColumnChart.jsx';
@@ -55,8 +54,7 @@ export function AdminAnalyticsPage() {
 
   return (
     <>
-      <h1>Admin</h1>
-      <AdminNav />
+      <h1>Analytics</h1>
       {isLoading && <DashboardSkeleton label="Loading analytics…" />}
       {error && <ErrorState error={error} onRetry={reload} />}
       {data && <AnalyticsReport data={data} />}

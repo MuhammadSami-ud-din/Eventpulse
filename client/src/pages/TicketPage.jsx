@@ -20,7 +20,7 @@ export function TicketPage() {
 
   if (isLoading) return <DetailSkeleton label="Loading ticket…" />;
   if (['REGISTRATION_NOT_FOUND', 'VALIDATION_ERROR'].includes(errorCode(error))) {
-    return <EmptyState title="Ticket not found" action={<Link to="/my/registrations" className="button">My registrations</Link>} />;
+    return <EmptyState icon="ticket" title="Ticket not found" action={<Link to="/my/registrations" className="button">My registrations</Link>} />;
   }
   if (error) return <ErrorState error={error} onRetry={reload} />;
 

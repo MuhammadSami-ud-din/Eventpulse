@@ -63,6 +63,7 @@ export function OrganizerDashboardPage() {
           </label>
           <input
             id="event-search"
+            data-shortcut="search"
             type="search"
             className="field__control"
             placeholder="Event title, venue…"
@@ -89,6 +90,7 @@ export function OrganizerDashboardPage() {
       {events.error && <ErrorState error={events.error} onRetry={events.reload} />}
       {events.data && events.data.data.length === 0 && (
         <EmptyState
+          icon="calendar"
           title="No events here"
           message={hasFilters ? 'Try another search or status.' : 'Create your first event to get started.'}
           action={!hasFilters && <Link to="/organizer/events/new" className="button button--primary">New event</Link>}

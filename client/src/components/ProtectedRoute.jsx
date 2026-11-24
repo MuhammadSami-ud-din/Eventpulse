@@ -12,7 +12,7 @@ export function ProtectedRoute({ roles, children }) {
   // `from` is a location object, not a URL, so it cannot redirect off-site.
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (roles && !roles.includes(user.role)) {
-    return <EmptyState title="Not available" message="This page isn't available for your account type." />;
+    return <EmptyState icon="alert" title="Not available" message="This page isn't available for your account type." />;
   }
   return children;
 }

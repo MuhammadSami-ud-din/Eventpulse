@@ -16,17 +16,21 @@ function SkeletonRegion({ label, children }) {
 
 // `className` is the real list's class (e.g. "event-grid"), so the placeholder
 // cards land in exactly the same columns as the cards that replace them.
-export function CardListSkeleton({ label, count = 6, className }) {
+// `cover` adds the image area that event cards have.
+export function CardListSkeleton({ label, count = 6, className, cover = false }) {
   return (
     <SkeletonRegion label={label}>
       <div className={className}>
         {times(count).map((index) => (
-          <div key={index} className="card skeleton-card">
-            <Bone className="skeleton--chip" />
-            <Bone className="skeleton--title" />
-            <Bone />
-            <Bone className="skeleton--short" />
-            <Bone className="skeleton--bar" />
+          <div key={index} className={`card skeleton-card ${cover ? 'skeleton-card--cover' : ''}`}>
+            {cover && <Bone className="skeleton--cover" />}
+            <div className="skeleton-card__body">
+              <Bone className="skeleton--chip" />
+              <Bone className="skeleton--title" />
+              <Bone />
+              <Bone className="skeleton--short" />
+              <Bone className="skeleton--bar" />
+            </div>
           </div>
         ))}
       </div>

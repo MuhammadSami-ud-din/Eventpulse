@@ -110,6 +110,7 @@ function RegistrationsTable({ event }) {
           </label>
           <input
             id="registration-search"
+            data-shortcut="search"
             type="search"
             className="field__control"
             placeholder="Name, email or student number"
@@ -161,7 +162,7 @@ function RegistrationsTable({ event }) {
       {list.isLoading && <TableSkeleton label="Loading registrations…" columns={5} />}
       {list.error && <ErrorState error={list.error} onRetry={list.reload} />}
       {list.data && list.data.data.length === 0 && (
-        <EmptyState title="No registrations found" message={q || status ? 'Try another search or filter.' : 'Nobody has registered yet.'} />
+        <EmptyState icon="users" title="No registrations found" message={q || status ? 'Try another search or filter.' : 'Nobody has registered yet.'} />
       )}
       {list.data && list.data.data.length > 0 && (
         <>

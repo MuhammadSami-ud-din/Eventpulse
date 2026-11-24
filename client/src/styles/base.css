@@ -17,18 +17,39 @@ body {
   background: var(--color-bg);
 }
 
-/* Two soft glows behind everything, which the glass panels pick up. A fixed
-   pseudo-element rather than background-attachment: fixed, which makes phones
-   repaint the whole background on every scroll. */
-body::before {
+/* The background: a fixed mesh of soft colour, plus one glow that drifts
+   slowly across it. Fixed pseudo-elements rather than background-attachment:
+   fixed, which makes phones repaint the whole background on every scroll. */
+body::before,
+body::after {
   content: '';
   position: fixed;
-  inset: 0;
   z-index: -1;
   pointer-events: none;
+}
+
+body::before {
+  inset: 0;
   background:
-    radial-gradient(60rem 40rem at 10% -10%, var(--bg-glow-1), transparent 70%),
-    radial-gradient(50rem 36rem at 100% 0%, var(--bg-glow-2), transparent 70%);
+    radial-gradient(42rem 32rem at 0% 0%, var(--mesh-1), transparent 70%),
+    radial-gradient(38rem 30rem at 100% 8%, var(--mesh-2), transparent 70%),
+    radial-gradient(46rem 34rem at 60% 110%, var(--mesh-3), transparent 70%);
+}
+
+body::after {
+  top: -20vmax;
+  left: -10vmax;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--bg-glow-1), transparent 65%);
+  animation: glow-drift 40s ease-in-out infinite alternate;
+}
+
+@keyframes glow-drift {
+  to {
+    transform: translate(70vw, 40vh);
+  }
 }
 
 h1,
@@ -91,164 +112,15 @@ img {
   top: var(--space-2);
 }
 
-/* ---------- App shell ---------- */
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--color-glass-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--color-glass-border);
-}
-
-.header__tools {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.header__inner {
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: var(--space-3) var(--space-4);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.brand {
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.menu-toggle {
-  font: inherit;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.nav {
-  display: none;
-  width: 100%;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.nav--open {
-  display: flex;
-}
-
-.nav__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.nav__link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.nav__link:hover,
-.nav__link.active {
-  color: var(--color-text);
-  background: var(--color-surface-muted);
-}
-
-.nav__badge {
-  min-width: 1.4rem;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-danger);
-  color: var(--color-on-danger);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.nav__account {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.main {
-  flex: 1;
-  width: 100%;
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: var(--space-5) var(--space-4) var(--space-7);
-}
-
-.main:focus {
-  outline: none;
-}
-
-.footer {
-  padding: var(--space-5) var(--space-4);
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-}
-
-@media (min-width: 48rem) {
-  .menu-toggle {
-    display: none;
-  }
-
-  /* Pushes the toggle and the nav to the right, keeping DOM order = visual order. */
-  .header__tools {
-    margin-left: auto;
-  }
-
-  .nav {
-    display: flex;
-    width: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-5);
-  }
-
-  .nav__list {
-    flex-direction: row;
-  }
-}
-
 /* ---------- Motion and transparency preferences ---------- */
-
-/* Blur only helps where content scrolls underneath (header, dialogs, toasts).
-   Without backdrop-filter support those panels become solid. */
-@supports not (backdrop-filter: blur(1px)) {
-  .header {
-    background: var(--color-surface);
-  }
-}
 
 /* Animations become instant, but still run once, so code waiting for an
    animation to finish keeps working. */
 @media (prefers-reduced-motion: reduce) {
+  body::after {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

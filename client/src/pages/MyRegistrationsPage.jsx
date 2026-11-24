@@ -65,6 +65,7 @@ export function MyRegistrationsPage() {
       {error && <ErrorState error={error} onRetry={reload} />}
       {data && data.length === 0 && (
         <EmptyState
+          icon="ticket"
           title="Nothing here yet"
           message={VIEWS[view].empty}
           action={view === 'upcoming' && <Link to="/" className="button button--primary">Browse events</Link>}

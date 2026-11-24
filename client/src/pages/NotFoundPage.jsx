@@ -6,6 +6,7 @@ export function NotFoundPage() {
   useDocumentTitle('Page not found');
   return (
     <EmptyState
+      icon="alert"
       title="Page not found"
       headingLevel={1}
       message="The page you’re looking for doesn’t exist."

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { createCategory, deleteCategory, fetchAdminCategories, updateCategory } from '../../api/admin.js';
-import { AdminNav } from '../../components/AdminNav.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { FormField } from '../../components/FormField.jsx';
 import { TableSkeleton } from '../../components/Skeletons.jsx';
@@ -109,8 +108,7 @@ export function AdminCategoriesPage() {
 
   return (
     <>
-      <h1>Admin</h1>
-      <AdminNav />
+      <h1>Categories</h1>
       <div className="categories-layout">
         <CategoryForm
           key={editing ? `edit-${editing.id}` : `new-${formVersion}`}
@@ -122,7 +120,7 @@ export function AdminCategoriesPage() {
         <div>
           {categories.isLoading && <TableSkeleton label="Loading categories…" columns={3} />}
           {categories.error && <ErrorState error={categories.error} onRetry={categories.reload} />}
-          {categories.data?.length === 0 && <EmptyState title="No categories yet" message="Add the first one." />}
+          {categories.data?.length === 0 && <EmptyState icon="tag" title="No categories yet" message="Add the first one." />}
           {categories.data?.length > 0 && (
             <TableWrap label="Categories" busy={categories.isFetching}>
               <table className="table">

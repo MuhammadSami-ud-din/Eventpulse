@@ -3,6 +3,7 @@ const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute:
 const shortDateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
 const monthFormat = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
 const shortMonthFormat = new Intl.DateTimeFormat(undefined, { month: 'short' });
+const dayFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric' });
 const dateTimeFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 const toDate = (value) => (value instanceof Date ? value : new Date(value));
@@ -33,3 +34,9 @@ export const formatShortMonth = (month) => shortMonthFormat.format(new Date(`${m
 
 // 0.8 -> "80%"; null (nothing to measure yet) -> "—".
 export const formatRate = (rate) => (rate === null ? '—' : `${Math.round(rate * 100)}%`);
+
+// The month and day of a date, for a calendar-style badge ("NOV" over "28").
+export const formatDateBadge = (value) => ({
+  month: shortMonthFormat.format(toDate(value)),
+  day: dayFormat.format(toDate(value)),
+});

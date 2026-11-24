@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { changeUserRole, fetchUsers, setUserActive } from '../../api/admin.js';
-import { AdminNav } from '../../components/AdminNav.jsx';
 import { Badge } from '../../components/Badge.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
@@ -106,8 +105,7 @@ export function AdminUsersPage() {
 
   return (
     <>
-      <h1>Admin</h1>
-      <AdminNav />
+      <h1>Users</h1>
       <div className="toolbar">
         <div className="field field--inline">
           <label htmlFor="user-search" className="field__label">
@@ -115,6 +113,7 @@ export function AdminUsersPage() {
           </label>
           <input
             id="user-search"
+            data-shortcut="search"
             type="search"
             className="field__control"
             placeholder="Name, email or student number"
@@ -155,7 +154,7 @@ export function AdminUsersPage() {
 
       {users.isLoading && <TableSkeleton label="Loading users…" columns={6} />}
       {users.error && <ErrorState error={users.error} onRetry={users.reload} />}
-      {users.data && users.data.data.length === 0 && <EmptyState title="No users found" message="Try another search." />}
+      {users.data && users.data.data.length === 0 && <EmptyState icon="users" title="No users found" message="Try another search." />}
       {users.data && users.data.data.length > 0 && (
         <>
           <p className="results-count" role="status">

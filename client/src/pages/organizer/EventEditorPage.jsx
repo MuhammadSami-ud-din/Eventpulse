@@ -50,7 +50,7 @@ function EditEventForm({ event, categories }) {
   }
 
   if (hasEventStarted(event)) {
-    return <EmptyState title="This event has started" message="Events can’t be edited once they begin." />;
+    return <EmptyState icon="clock" title="This event has started" message="Events can’t be edited once they begin." />;
   }
   return (
     <>

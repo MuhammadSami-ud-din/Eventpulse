@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { createAccount } from '../../api/admin.js';
-import { AdminNav } from '../../components/AdminNav.jsx';
 import { FormField } from '../../components/FormField.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
@@ -56,10 +55,8 @@ export function AdminNewAccountPage() {
 
   return (
     <>
-      <h1>Admin</h1>
-      <AdminNav />
+      <h1>New organizer or admin account</h1>
       <section className="card narrow-form">
-        <h2>New organizer or admin account</h2>
         <p className="page-intro">
           Students create their own accounts. Pass the password on to the new user privately; they can change it on
           their profile page.

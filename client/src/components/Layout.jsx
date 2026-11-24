@@ -1,36 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useNotifications } from '../context/NotificationsContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useStoredFlag } from '../hooks/useStoredFlag.js';
 import { useTheme } from '../hooks/useTheme.js';
+import { commandsFor } from '../utils/commands.js';
+import { shortcutFor } from '../utils/shortcuts.js';
+import { CommandPalette } from './CommandPalette.jsx';
+import { Icon } from './Icon.jsx';
+import { Modal } from './Modal.jsx';
+import { ShortcutsDialog } from './ShortcutsDialog.jsx';
+import { SidebarContent } from './Sidebar.jsx';
 
-function NavItem({ to, children }) {
-  return (
-    <li>
-      <NavLink to={to} end={to === '/'} className="nav__link">
-        {children}
-      </NavLink>
-    </li>
-  );
-}
-
-// A moon in light mode, a sun in dark mode. Purely decorative: the button's
-// name stays "Dark theme" and aria-pressed says whether it is on.
-function ThemeIcon({ dark }) {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      {dark ? (
-        <>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-        </>
-      ) : (
-        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
-      )}
-    </svg>
-  );
-}
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 // After following a link, start at the top of the new page and move focus to
 // its content, so keyboard and screen-reader users are not left on the link
@@ -50,100 +32,139 @@ function useFocusOnNavigation(mainRef) {
   }, [location.pathname, navigationType, mainRef]);
 }
 
+// Ctrl/Cmd+K, "/" and "?" for the whole app. While a dialog is open the
+// single-key shortcuts stay quiet, and Ctrl/Cmd+K only closes the palette.
+function useGlobalShortcuts({ togglePalette, openPalette, openHelp }) {
+  useEffect(() => {
+    function handleKeyDown(e) {
+      const shortcut = shortcutFor(e);
+      if (!shortcut) return;
+      const openDialog = document.querySelector('dialog[open]');
+      if (openDialog && !(shortcut === 'palette' && openDialog.classList.contains('modal--palette'))) return;
+      e.preventDefault();
+      if (shortcut === 'palette') togglePalette();
+      if (shortcut === 'help') openHelp();
+      if (shortcut === 'search') {
+        const searchBox = document.querySelector('[data-shortcut="search"]');
+        if (searchBox) searchBox.focus();
+        else openPalette();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [togglePalette, openPalette, openHelp]);
+}
+
 export function Layout() {
   const { user, logout } = useAuth();
-  const { unreadCount } = useNotifications();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [collapsed, toggleCollapsed] = useStoredFlag('eventpulse-sidebar-collapsed', false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const mainRef = useRef(null);
   useFocusOnNavigation(mainRef);
 
-  // Close the mobile menu after navigating.
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  // Close the mobile drawer after navigating.
+  useEffect(() => setDrawerOpen(false), [location.pathname]);
 
-  async function handleLogout() {
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+  const togglePalette = useCallback(() => setPaletteOpen((open) => !open), []);
+  const openHelp = useCallback(() => setHelpOpen(true), []);
+  useGlobalShortcuts({ togglePalette, openPalette, openHelp });
+
+  const handleLogout = useCallback(async () => {
     await logout();
     showToast({ type: 'success', message: 'You have been logged out.' });
     navigate('/');
+  }, [logout, showToast, navigate]);
+
+  const commands = useMemo(() => commandsFor(user), [user]);
+
+  function runCommand(command) {
+    setPaletteOpen(false);
+    if (command.to) navigate(command.to);
+    if (command.id === 'action:theme') toggleTheme();
+    if (command.id === 'action:shortcuts') setHelpOpen(true);
+    if (command.id === 'action:logout') handleLogout();
   }
 
+  const sidebarProps = {
+    theme,
+    onToggleTheme: toggleTheme,
+    onShowShortcuts: openHelp,
+    onLogout: handleLogout,
+  };
+
   return (
-    <div className="app">
+    <div className={`shell ${collapsed ? 'shell--collapsed' : ''}`}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <header className="header">
-        <div className="header__inner">
-          <Link to="/" className="brand">
-            EventPulse
+
+      {/* A labelled landmark, so the logo, account card and buttons in it can
+          be reached by landmark navigation like the rest of the page. */}
+      <aside className="sidebar" aria-label="Site menu">
+        <SidebarContent {...sidebarProps} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
+      </aside>
+
+      <div className="shell__body">
+        <header className="topbar">
+          <button
+            type="button"
+            className="icon-button topbar__menu"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Icon name="menu" />
+            <span className="visually-hidden">Menu</span>
+          </button>
+          <Link to="/" className="brand topbar__brand">
+            <span className="brand__mark" aria-hidden="true" />
+            <span className="brand__name">EventPulse</span>
           </Link>
-          <div className="header__tools">
-            <button
-              type="button"
-              className="icon-button"
-              aria-pressed={theme === 'dark'}
-              title="Dark theme"
-              onClick={toggleTheme}
-            >
-              <ThemeIcon dark={theme === 'dark'} />
-              <span className="visually-hidden">Dark theme</span>
-            </button>
-            <button
-              type="button"
-              className="menu-toggle"
-              aria-expanded={menuOpen}
-              aria-controls="main-nav"
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              Menu
-            </button>
+          <button type="button" className="search-trigger" onClick={openPalette} aria-keyshortcuts="Control+K Meta+K">
+            <Icon name="search" />
+            <span className="search-trigger__label">Search or jump to…</span>
+            <kbd className="kbd search-trigger__kbd">{isMac ? '⌘ K' : 'Ctrl K'}</kbd>
+          </button>
+          <button type="button" className="icon-button topbar__theme" aria-pressed={theme === 'dark'} onClick={toggleTheme}>
+            <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+            <span className="visually-hidden">Dark theme</span>
+          </button>
+        </header>
+
+        <main id="main" ref={mainRef} className="main" tabIndex={-1}>
+          {/* A new key per page replays the entrance animation on every navigation. */}
+          <div key={location.pathname} className="page">
+            <Outlet />
           </div>
-          <nav id="main-nav" className={`nav ${menuOpen ? 'nav--open' : ''}`} aria-label="Main">
-            <ul className="nav__list">
-              <NavItem to="/">Events</NavItem>
-              {user?.role === 'student' && <NavItem to="/my/registrations">My registrations</NavItem>}
-              {user?.role === 'organizer' && <NavItem to="/organizer">My events</NavItem>}
-              {user?.role === 'admin' && <NavItem to="/organizer">Manage events</NavItem>}
-              {user?.role === 'admin' && <NavItem to="/admin">Admin</NavItem>}
-              {user && (
-                <NavItem to="/notifications">
-                  Notifications
-                  {unreadCount > 0 && (
-                    <span className="nav__badge">
-                      {unreadCount}
-                      <span className="visually-hidden"> unread</span>
-                    </span>
-                  )}
-                </NavItem>
-              )}
-              {user && <NavItem to="/profile">Profile</NavItem>}
-            </ul>
-            <div className="nav__account">
-              {user ? (
-                <button type="button" className="button button--ghost" onClick={handleLogout}>
-                  Log out
-                </button>
-              ) : (
-                <>
-                  <Link to="/login" state={{ from: location }} className="button button--ghost">
-                    Log in
-                  </Link>
-                  <Link to="/register" className="button button--primary">
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </div>
-          </nav>
+        </main>
+        <footer className="footer">EventPulse · Campus events, without the queue.</footer>
+      </div>
+
+      <Modal open={drawerOpen} onClose={() => setDrawerOpen(false)} label="Menu" className="modal--drawer">
+        <div className="drawer">
+          <SidebarContent
+            {...sidebarProps}
+            onShowShortcuts={() => {
+              setDrawerOpen(false);
+              openHelp();
+            }}
+            onLogout={() => {
+              setDrawerOpen(false);
+              handleLogout();
+            }}
+            onNavigate={() => setDrawerOpen(false)}
+            onClose={() => setDrawerOpen(false)}
+          />
         </div>
-      </header>
-      <main id="main" ref={mainRef} className="main" tabIndex={-1}>
-        <Outlet />
-      </main>
-      <footer className="footer">EventPulse · Campus events, without the queue.</footer>
+      </Modal>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} onRun={runCommand} />
+      <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }

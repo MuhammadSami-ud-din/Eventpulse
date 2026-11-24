@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { approveEvent, rejectEvent } from '../../api/admin.js';
 import { fetchManagedEvents } from '../../api/organizer.js';
-import { AdminNav } from '../../components/AdminNav.jsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { FormField } from '../../components/FormField.jsx';
 import { Pagination } from '../../components/Pagination.jsx';
@@ -73,12 +72,11 @@ export function AdminApprovalsPage() {
 
   return (
     <>
-      <h1>Admin</h1>
-      <AdminNav />
+      <h1>Event approvals</h1>
       {pending.isLoading && <CardListSkeleton label="Loading pending events…" className="approval-list" count={3} />}
       {pending.error && <ErrorState error={pending.error} onRetry={pending.reload} />}
       {pending.data && pending.data.data.length === 0 && (
-        <EmptyState title="All caught up" message="There are no events waiting for approval." />
+        <EmptyState icon="check" title="All caught up" message="There are no events waiting for approval." />
       )}
       {pending.data && pending.data.data.length > 0 && (
         <>

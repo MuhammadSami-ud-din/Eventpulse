@@ -23,7 +23,7 @@ export function TicketStatusPage() {
 
   if (isLoading) return <Loading label="Checking ticket…" />;
   if (['TICKET_NOT_FOUND', 'VALIDATION_ERROR'].includes(errorCode(error))) {
-    return <EmptyState title="Ticket not found" message="Check the code and try again." action={<Link to="/" className="button">Browse events</Link>} />;
+    return <EmptyState icon="ticket" title="Ticket not found" message="Check the code and try again." action={<Link to="/" className="button">Browse events</Link>} />;
   }
   if (error) return <ErrorState error={error} onRetry={reload} />;
 

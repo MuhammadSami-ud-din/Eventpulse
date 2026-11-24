@@ -17,6 +17,7 @@ export function ManagedEventGate({ children }) {
   if (NOT_YOURS.has(errorCode(error))) {
     return (
       <EmptyState
+        icon="calendar"
         title="Event not found"
         message="It may have been deleted, or it belongs to another organizer."
         action={<Link to="/organizer" className="button">My events</Link>}

@@ -26,6 +26,7 @@ export function EventDetailPage() {
   if (['EVENT_NOT_FOUND', 'VALIDATION_ERROR'].includes(errorCode(error))) {
     return (
       <EmptyState
+        icon="calendar"
         title="Event not found"
         message="It may have been removed, or the link is wrong."
         action={<Link to="/" className="button">Browse events</Link>}

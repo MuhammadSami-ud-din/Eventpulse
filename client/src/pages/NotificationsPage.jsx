@@ -62,7 +62,7 @@ export function NotificationsPage() {
         )}
       </div>
       {data.data.length === 0 ? (
-        <EmptyState title="No notifications yet" message="Registration updates and waitlist news will appear here." />
+        <EmptyState icon="bell" title="No notifications yet" message="Registration updates and waitlist news will appear here." />
       ) : (
         <ul className="notification-list">
           {data.data.map((notification) => {

@@ -99,6 +99,7 @@ export function HomePage() {
           </label>
           <input
             id="event-search"
+            data-shortcut="search"
             type="search"
             className="search__input"
             placeholder="Search events, venues…"
@@ -187,7 +188,7 @@ export function HomePage() {
 }
 
 function EventResults({ events, hasFilters, onClear, onPageChange }) {
-  if (events.isLoading) return <CardListSkeleton label="Loading events…" className="event-grid" />;
+  if (events.isLoading) return <CardListSkeleton label="Loading events…" className="event-grid" cover />;
   if (events.error) return <ErrorState error={events.error} onRetry={events.reload} />;
   if (!events.data) return null;
 
@@ -195,6 +196,7 @@ function EventResults({ events, hasFilters, onClear, onPageChange }) {
   if (data.length === 0) {
     return (
       <EmptyState
+        icon="search"
         title="No events found"
         message={hasFilters ? 'Try a different search or clear the filters.' : 'New events will appear here once they are announced.'}
         action={
