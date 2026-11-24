@@ -1,3 +1,4 @@
+import { browserUtcOffsetMinutes } from '../utils/dateInput.js';
 import { api } from './client.js';
 
 export const fetchManagedEvents = (params, { signal } = {}) =>
@@ -15,7 +16,7 @@ export const closeEvent = (id) => api.post(`/organizer/events/${id}/close`).then
 // Days in the chart are counted in this browser's time zone.
 export const fetchEventStats = (id, { signal } = {}) =>
   api
-    .get(`/organizer/events/${id}/stats`, { params: { utcOffsetMinutes: -new Date().getTimezoneOffset() }, signal })
+    .get(`/organizer/events/${id}/stats`, { params: { utcOffsetMinutes: browserUtcOffsetMinutes() }, signal })
     .then((res) => res.data.stats);
 
 export const fetchEventRegistrations = (id, params, { signal } = {}) =>

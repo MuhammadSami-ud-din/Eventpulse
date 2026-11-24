@@ -20,3 +20,9 @@ export const isoDateTime = z.iso
     error: 'Use an ISO date-time with a time zone, e.g. 2026-12-01T09:00:00Z',
   })
   .transform((value) => new Date(value));
+
+// For charts bucketed by day or month in the viewer's time zone. The browser
+// sends its offset from UTC in minutes (east positive), from -12h to +14h.
+export const utcOffsetQuerySchema = z.object({
+  utcOffsetMinutes: z.coerce.number().int().min(-720).max(840).default(0),
+});

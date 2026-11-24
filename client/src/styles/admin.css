@@ -1,0 +1,103 @@
+/* ---------- Admin: forms ---------- */
+.narrow-form {
+  max-width: 36rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* A select that fits in a table row. */
+.field__control--compact {
+  width: auto;
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.85rem;
+}
+
+/* ---------- Admin: categories ---------- */
+/* minmax(0, …) lets the table column shrink, so a wide table scrolls in its
+   own box instead of stretching the grid past the screen. */
+.categories-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 56rem) {
+  .categories-layout {
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.category-form h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.row-actions__note {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.table code {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.table__caption {
+  caption-side: top;
+  padding: var(--space-3);
+  text-align: left;
+  font-weight: 600;
+}
+
+/* ---------- Admin: analytics ---------- */
+.bar-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar-list__label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font-size: 0.9rem;
+}
+
+.bar-list__value {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Same look as the stacked attendance bar: muted track, 4px rounded ends. */
+.bar-list__track {
+  height: 0.75rem;
+  margin-top: var(--space-1);
+  border-radius: 4px;
+  background: var(--color-surface-muted);
+}
+
+.bar-list__fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+}

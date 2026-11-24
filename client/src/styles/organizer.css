@@ -26,8 +26,11 @@
   }
 }
 
-/* Wide tables scroll inside their own box, never the whole page. */
+/* Wide tables scroll inside their own box, never the whole page.
+   position: relative keeps absolutely positioned content (such as a
+   visually hidden column heading) inside that box too. */
 .table-wrap {
+  position: relative;
   overflow-x: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-border);

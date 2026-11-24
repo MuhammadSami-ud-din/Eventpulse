@@ -4,7 +4,7 @@ import { z } from 'zod';
 // would give a false sense of security. Counted in bytes because of UTF-8.
 const BCRYPT_MAX_BYTES = 72;
 
-const email = z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address').max(255));
+export const email = z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address').max(255));
 
 export const newPassword = z
   .string()
@@ -14,7 +14,7 @@ export const newPassword = z
   .refine((value) => /\d/.test(value), 'Include at least one number');
 
 // Unknown keys (e.g. a sneaky "role": "admin") are stripped by zod objects.
-const fullName = z.string().trim().min(2, 'Name is too short').max(100);
+export const fullName = z.string().trim().min(2, 'Name is too short').max(100);
 
 export const registerSchema = z.object({
   fullName,

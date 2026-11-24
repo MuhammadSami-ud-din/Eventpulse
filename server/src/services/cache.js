@@ -5,12 +5,13 @@ import { LRUCache } from 'lru-cache';
 // The TTL is a safety net; correctness comes from invalidating on every write.
 const cache = new LRUCache({ max: 500, ttl: 30 * 1000 });
 
-const EVENT_LIST_PREFIX = 'events:list:';
+const EVENT_PREFIX = 'events:';
+const EVENT_LIST_PREFIX = `${EVENT_PREFIX}list:`;
 
 export const cacheKeys = {
   // The validated query has a fixed key order, so equal filters give equal keys.
   eventList: (query) => `${EVENT_LIST_PREFIX}${JSON.stringify(query)}`,
-  eventDetail: (id) => `events:detail:${id}`,
+  eventDetail: (id) => `${EVENT_PREFIX}detail:${id}`,
   categories: 'categories',
 };
 
@@ -27,6 +28,13 @@ export function invalidateEvent(eventId) {
   cache.delete(cacheKeys.eventDetail(eventId));
   for (const key of [...cache.keys()]) {
     if (key.startsWith(EVENT_LIST_PREFIX)) cache.delete(key);
+  }
+}
+
+// A renamed category changes the category name shown on every one of its events.
+export function invalidateAllEvents() {
+  for (const key of [...cache.keys()]) {
+    if (key.startsWith(EVENT_PREFIX)) cache.delete(key);
   }
 }
 

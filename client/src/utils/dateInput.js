@@ -13,3 +13,6 @@ export function toLocalInputValue(value) {
 export function fromLocalInputValue(value) {
   return new Date(value).toISOString();
 }
+
+// Minutes east of UTC (300 in Pakistan). getTimezoneOffset() counts the other way.
+export const browserUtcOffsetMinutes = () => -new Date().getTimezoneOffset();

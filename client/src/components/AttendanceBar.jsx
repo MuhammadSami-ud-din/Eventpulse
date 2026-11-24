@@ -3,7 +3,8 @@ import { pluralize } from '../utils/format.js';
 // One stacked bar of the confirmed seats: attended, no-show, and the rest
 // (not marked yet), which is left as the empty track rather than a third colour.
 // Colours come from --series-1/--series-2, checked for colour-blind separation.
-export function AttendanceBar({ stats }) {
+// `title` defaults to a caption for one event's seats.
+export function AttendanceBar({ stats, title }) {
   const { confirmed, attended, noShows, notMarked } = stats;
   if (confirmed === 0) return <p className="chart__empty">No confirmed registrations yet.</p>;
 
@@ -15,7 +16,7 @@ export function AttendanceBar({ stats }) {
 
   return (
     <figure className="chart">
-      <figcaption className="chart__title">Attendance of {pluralize(confirmed, 'confirmed seat')}</figcaption>
+      <figcaption className="chart__title">{title ?? `Attendance of ${pluralize(confirmed, 'confirmed seat')}`}</figcaption>
       <div className="stacked-bar" aria-hidden="true">
         {segments
           .filter((segment) => segment.count > 0)

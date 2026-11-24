@@ -1,4 +1,5 @@
-import { formatDate, formatShortDate, pluralize } from '../utils/format.js';
+import { formatDate, formatShortDate } from '../utils/format.js';
+import { ColumnChart } from './ColumnChart.jsx';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -17,58 +18,25 @@ function fillMissingDays(days) {
 }
 
 // Noon avoids the date shifting to the previous day when formatted in a time zone west of UTC.
-const formatDay = (date) => formatDate(`${date}T12:00:00`);
+const atNoon = (date) => `${date}T12:00:00`;
 
 export function RegistrationsChart({ days }) {
   const series = fillMissingDays(days);
-  if (series.length === 0) return <p className="chart__empty">No registrations yet.</p>;
-  const max = Math.max(...series.map((day) => day.count));
-
+  // Only the first and last days are labelled, so labels never collide.
+  const isEnd = (index) => index === 0 || index === series.length - 1;
+  const columns = series.map((day, index) => ({
+    key: day.date,
+    label: formatDate(atNoon(day.date)),
+    tick: isEnd(index) ? formatShortDate(atNoon(day.date)) : '',
+    count: day.count,
+  }));
   return (
-    <figure className="chart">
-      <figcaption className="chart__title">Registrations per day</figcaption>
-      <div className="column-chart" aria-hidden="true">
-        <span className="column-chart__max">{max}</span>
-        <div className="column-chart__plot">
-          {series.map((day) => (
-            <div
-              key={day.date}
-              className="column-chart__column"
-              data-tip={`${formatDay(day.date)}: ${pluralize(day.count, 'registration')}`}
-            >
-              <div className="column-chart__bar" style={{ height: `${(day.count / max) * 100}%` }} />
-            </div>
-          ))}
-        </div>
-        {/* Same column layout as the plot, so each label sits under its bar.
-            Only the first and last days are labelled to avoid collisions. */}
-        <div className="column-chart__axis">
-          {series.map((day, index) => (
-            <span key={day.date} className="column-chart__tick">
-              {index === 0 || index === series.length - 1 ? formatShortDate(`${day.date}T12:00:00`) : ''}
-            </span>
-          ))}
-        </div>
-      </div>
-      <details className="chart__table">
-        <summary>Show as table</summary>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Day</th>
-              <th scope="col">Registrations</th>
-            </tr>
-          </thead>
-          <tbody>
-            {series.map((day) => (
-              <tr key={day.date}>
-                <td>{formatDay(day.date)}</td>
-                <td>{day.count}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
-    </figure>
+    <ColumnChart
+      title="Registrations per day"
+      columns={columns}
+      columnHeading="Day"
+      unit="registration"
+      emptyMessage="No registrations yet."
+    />
   );
 }

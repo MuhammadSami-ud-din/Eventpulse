@@ -4,10 +4,9 @@ import * as organizerEvents from '../controllers/organizerEvent.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { checkInSchema, markAttendanceSchema, registrationParamsSchema } from '../schemas/attendance.schemas.js';
-import { idParamSchema } from '../schemas/common.schemas.js';
+import { idParamSchema, utcOffsetQuerySchema } from '../schemas/common.schemas.js';
 import {
   createEventSchema,
-  eventStatsQuerySchema,
   managedEventsQuerySchema,
   updateEventSchema,
 } from '../schemas/event.schemas.js';
@@ -33,7 +32,7 @@ organizerRouter.post('/events/:id/publish', byId, organizerEvents.publishEvent);
 organizerRouter.post('/events/:id/close', byId, organizerEvents.closeEvent);
 organizerRouter.get(
   '/events/:id/stats',
-  validate({ params: idParamSchema, query: eventStatsQuerySchema }),
+  validate({ params: idParamSchema, query: utcOffsetQuerySchema }),
   organizerEvents.getStats,
 );
 organizerRouter.get('/events/:id/registrations/export', byId, organizerEvents.exportRegistrations);

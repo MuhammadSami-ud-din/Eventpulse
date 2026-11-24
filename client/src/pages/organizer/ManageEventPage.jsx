@@ -14,7 +14,7 @@ import { useAsync } from '../../hooks/useAsync.js';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { errorMessage } from '../../utils/errors.js';
 import { hasEventStarted } from '../../utils/eventStatus.js';
-import { formatDateTime } from '../../utils/format.js';
+import { formatDateTime, formatRate } from '../../utils/format.js';
 
 const DELETABLE = new Set(['draft', 'pending', 'rejected']);
 
@@ -52,7 +52,6 @@ function EventStats({ event }) {
   if (isLoading) return <Loading label="Loading stats…" />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
-  const rate = stats.attendanceRate === null ? '—' : `${Math.round(stats.attendanceRate * 100)}%`;
   return (
     <section aria-labelledby="stats-heading" className="manage-section">
       <h2 id="stats-heading">Stats</h2>
@@ -62,7 +61,7 @@ function EventStats({ event }) {
         <StatTile label="Cancelled" value={stats.cancelled} />
         <StatTile label="Attended" value={stats.attended} />
         <StatTile label="No-shows" value={stats.noShows} />
-        <StatTile label="Attendance rate" value={rate} detail="of students marked" />
+        <StatTile label="Attendance rate" value={formatRate(stats.attendanceRate)} detail="of students marked" />
       </div>
       <div className="chart-grid">
         <div className="card">

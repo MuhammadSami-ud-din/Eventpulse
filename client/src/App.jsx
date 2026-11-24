@@ -11,7 +11,10 @@ import { ProfilePage } from './pages/ProfilePage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
 import { TicketPage } from './pages/TicketPage.jsx';
 import { TicketStatusPage } from './pages/TicketStatusPage.jsx';
+import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage.jsx';
 import { AdminApprovalsPage } from './pages/admin/AdminApprovalsPage.jsx';
+import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage.jsx';
+import { AdminNewAccountPage } from './pages/admin/AdminNewAccountPage.jsx';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage.jsx';
 import { CheckInPage } from './pages/organizer/CheckInPage.jsx';
 import { EditEventPage, NewEventPage } from './pages/organizer/EventEditorPage.jsx';
@@ -46,6 +49,9 @@ export default function App() {
         <Route path="organizer/events/:id/check-in" element={organizerOnly(<CheckInPage />)} />
         <Route path="admin" element={adminOnly(<AdminApprovalsPage />)} />
         <Route path="admin/users" element={adminOnly(<AdminUsersPage />)} />
+        <Route path="admin/users/new" element={adminOnly(<AdminNewAccountPage />)} />
+        <Route path="admin/categories" element={adminOnly(<AdminCategoriesPage />)} />
+        <Route path="admin/analytics" element={adminOnly(<AdminAnalyticsPage />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

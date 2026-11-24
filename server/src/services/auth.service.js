@@ -30,7 +30,7 @@ async function issueTokens(db, userId) {
   return { accessToken: signAccessToken(userId), refreshToken };
 }
 
-function duplicateFieldError(err) {
+export function duplicateFieldError(err) {
   if (err.sqlMessage?.includes('uq_users_student_number')) {
     return new HttpError(409, 'STUDENT_NUMBER_TAKEN', 'This student number is already registered');
   }
@@ -118,7 +118,7 @@ export async function revokeRefreshToken(refreshToken) {
   );
 }
 
-async function revokeAllSessions(db, userId) {
+export async function revokeAllSessions(db, userId) {
   await db.execute(
     'UPDATE refresh_tokens SET revoked_at = UTC_TIMESTAMP() WHERE user_id = ? AND revoked_at IS NULL',
     [userId],

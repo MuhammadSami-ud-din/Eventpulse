@@ -71,7 +71,8 @@ export class TestContext {
   runId = `${Date.now().toString(36)}${randomBytes(2).toString('hex')}`;
   userIds = [];
   eventIds = [];
-  categoryId = null;
+  // categoryIds[0] is the default category for createEvent(); tests add the ones they create.
+  categoryIds = [];
   organizer = null;
   // Incremented synchronously, so users created in parallel never share a number.
   #userCount = 0;
@@ -87,7 +88,7 @@ export class TestContext {
       'INSERT INTO event_categories (name, slug) VALUES (?, ?)',
       [`Test ${this.runId}`, `test-${this.runId}`],
     );
-    this.categoryId = category.insertId;
+    this.categoryIds.push(category.insertId);
     this.organizer = await this.createUser('organizer');
   }
 
@@ -128,6 +129,8 @@ export class TestContext {
     startsAt = fromNow(days(5)),
     registrationDeadline = new Date(startsAt.getTime() - hours(2)),
     cancellationWindowHours = 24,
+    categoryId = this.categoryIds[0],
+    organizerId = this.organizer.id,
   } = {}) {
     const [result] = await pool.query(
       `INSERT INTO events (
@@ -135,8 +138,8 @@ export class TestContext {
          registration_deadline, cancellation_window_hours, capacity, status
        ) VALUES (?, ?, ?, 'Created by the automated test suite.', 'Test Lab', ?, ?, ?, ?, ?, 'published')`,
       [
-        this.organizer.id,
-        this.categoryId,
+        organizerId,
+        categoryId,
         `Test event ${this.runId}`,
         startsAt,
         new Date(startsAt.getTime() + hours(2)),
@@ -188,8 +191,8 @@ export class TestContext {
         // notifications and refresh_tokens are removed by ON DELETE CASCADE.
         await pool.query('DELETE FROM users WHERE id IN (?)', [this.userIds]);
       }
-      if (this.categoryId) {
-        await pool.query('DELETE FROM event_categories WHERE id = ?', [this.categoryId]);
+      if (this.categoryIds.length) {
+        await pool.query('DELETE FROM event_categories WHERE id IN (?)', [this.categoryIds]);
       }
     } finally {
       this.server?.close();

@@ -1,6 +1,8 @@
 const dateFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 const timeFormat = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
 const shortDateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
+const monthFormat = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+const shortMonthFormat = new Intl.DateTimeFormat(undefined, { month: 'short' });
 const dateTimeFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 const toDate = (value) => (value instanceof Date ? value : new Date(value));
@@ -24,3 +26,10 @@ export function formatEventTime(startsAt, endsAt) {
 export const formatTicketCode = (code) => code.replace(/^(.{5})(.{5})$/, '$1 $2');
 
 export const pluralize = (count, word, plural = `${word}s`) => `${count} ${count === 1 ? word : plural}`;
+
+// "2026-11" -> "November 2026" / "Nov". Mid-month noon, so no time zone can shift it into another month.
+export const formatMonth = (month) => monthFormat.format(new Date(`${month}-15T12:00:00`));
+export const formatShortMonth = (month) => shortMonthFormat.format(new Date(`${month}-15T12:00:00`));
+
+// 0.8 -> "80%"; null (nothing to measure yet) -> "—".
+export const formatRate = (rate) => (rate === null ? '—' : `${Math.round(rate * 100)}%`);

@@ -73,8 +73,8 @@ equivalent setting in your host's documentation.
    ```sql
    UPDATE users SET role = 'admin' WHERE email = 'you@your-university.edu';
    ```
-   Organizer accounts are promoted the same way (`role = 'organizer'`) until
-   the admin user-management screen arrives.
+   After that, create organizer and admin accounts from **Admin → Users →
+   New organizer or admin**; no more SQL is needed.
 3. Test check-in on a phone: open an event's **Check-in** tab, tap
    **Start camera**, and scan a ticket.
 

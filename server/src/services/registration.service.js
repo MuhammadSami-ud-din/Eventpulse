@@ -190,6 +190,23 @@ async function isCheckedIn(conn, registrationId) {
   return rows.length > 0;
 }
 
+// Must be called inside a transaction that holds the event lock and the
+// registration row. A freed seat goes to the waitlist in the same transaction:
+// if promotion fails, the cancellation rolls back too, so a seat is never left
+// empty while someone is still waiting for it.
+async function markCancelled(conn, eventId, registration) {
+  await conn.query(
+    `UPDATE event_registrations
+     SET status = 'cancelled', waitlist_position = NULL, cancelled_at = UTC_TIMESTAMP()
+     WHERE id = ?`,
+    [registration.id],
+  );
+  if (registration.status === 'confirmed') {
+    await conn.query('UPDATE events SET confirmed_count = confirmed_count - 1 WHERE id = ?', [eventId]);
+    await fillOpenSeats(conn, eventId);
+  }
+}
+
 export async function cancel(user, registrationId) {
   // Ownership is part of the WHERE clause, so another student's registration
   // is indistinguishable from one that does not exist.
@@ -212,27 +229,40 @@ export async function cancel(user, registrationId) {
       throw new HttpError(409, 'ALREADY_CHECKED_IN', 'You have already been checked in to this event');
     }
 
-    await conn.query(
-      `UPDATE event_registrations
-       SET status = 'cancelled', waitlist_position = NULL, cancelled_at = UTC_TIMESTAMP()
-       WHERE id = ?`,
-      [registrationId],
-    );
+    await markCancelled(conn, eventId, registration);
     await createNotification(conn, {
       userId: user.id,
       eventId,
       type: 'registration_cancelled',
       eventTitle: event.title,
     });
-
-    if (registration.status === 'confirmed') {
-      await conn.query('UPDATE events SET confirmed_count = confirmed_count - 1 WHERE id = ?', [eventId]);
-      // Same transaction: if promotion fails, the cancellation rolls back too,
-      // so a seat is never left empty while someone is still waiting for it.
-      await fillOpenSeats(conn, eventId);
-    }
   });
 
   invalidateEvent(eventId);
   return getRegistrationForUser(user.id, registrationId);
+}
+
+// Used when an admin disables an account: the user's seats and waitlist places
+// in events that have not started go to the next students in line. The usual
+// cancellation window does not apply, because the account can no longer attend.
+// One transaction per event, taking that event's lock like any cancellation.
+export async function releaseUpcomingRegistrations(userId) {
+  const [rows] = await pool.query(
+    `SELECT r.id, r.event_id FROM event_registrations r
+     JOIN events e ON e.id = r.event_id
+     WHERE r.user_id = ? AND r.status IN ('confirmed', 'waitlisted') AND e.starts_at > UTC_TIMESTAMP()`,
+    [userId],
+  );
+  for (const row of rows) {
+    await withTransaction(async (conn) => {
+      await lockEvent(conn, row.event_id);
+      const [[registration]] = await conn.query(
+        'SELECT id, status FROM event_registrations WHERE id = ? FOR UPDATE',
+        [row.id],
+      );
+      if (registration.status !== 'cancelled') await markCancelled(conn, row.event_id, registration);
+    });
+    invalidateEvent(row.event_id);
+  }
+  return rows.length;
 }
